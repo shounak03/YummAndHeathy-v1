@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
+import { login } from '../action'
+import { toast } from 'sonner'
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -11,35 +12,55 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   setError('')
+  //   setLoading(true)
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
+  //   try {
+  //     const response = await fetch('/api/auth/login', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ email, password }),
+  //     })
 
-      const data = await response.json()
+  //     const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to login')
-      }
+  //     if (!response.ok) {
+  //       throw new Error(data.error || 'Failed to login')
+  //     }
 
-      router.push('/dashboard')
-      router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }
+  //     router.push('/profile')
+  //     router.refresh()
+  //   } catch (err) {
+  //     setError(err instanceof Error ? err.message : 'An error occurred')
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+  const [isPending, startTransition] = useTransition();
 
+    
+
+    const handleSubmit = () => {
+      
+      let formData = new FormData();
+      formData.append("email", email);
+      formData.append("password", password);
+        startTransition(async () => {
+            const { errorMessage } = await login(formData);
+            if (errorMessage) {
+                toast.error(errorMessage);
+                console.log(errorMessage);
+                
+            } else {
+                toast.success("Successfully logged in");
+                router.push("/profile");
+            }
+        });
+    };
   return (
     <div>
       <form className="space-y-6" onSubmit={handleSubmit}>
