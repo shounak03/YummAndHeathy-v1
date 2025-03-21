@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-// import { signup } from '../action'
 import { signup } from '../action'
 import { redirect } from 'next/navigation'
 
