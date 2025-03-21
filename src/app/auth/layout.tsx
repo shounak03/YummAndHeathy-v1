@@ -1,3 +1,5 @@
+import { Toaster } from "sonner"
+
 export default function AuthLayout({
   children,
 }: {
@@ -17,6 +19,7 @@ export default function AuthLayout({
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {children}
         </div>
+        <Toaster />
       </div>
     </div>
   )

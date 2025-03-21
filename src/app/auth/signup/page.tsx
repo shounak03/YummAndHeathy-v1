@@ -4,7 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 // import { signup } from '../action'
-import { signup } from '../actions'
+import { signup } from '../action'
+import { redirect } from 'next/navigation'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -31,6 +32,9 @@ export default function SignupPage() {
       
       if (errorMessage) {
         toast.error(errorMessage)
+        console.log(errorMessage);
+        redirect('/profile')
+        
       } else {
         toast.success('Account created successfully')
       }

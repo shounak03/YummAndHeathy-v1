@@ -6,6 +6,22 @@ import { redirect } from 'next/navigation'
 
 
 
+// export async function login(formData: FormData) {
+//   const supabase = await createClient()
+
+//  
+
+//   const { error } = await supabase.auth.signInWithPassword(data)
+
+//   if (error) {
+//     console.log(error);
+    
+//     return { errorMessage: error.message }
+//   }
+
+//   revalidatePath('/', 'layout')
+//   redirect('/profile')
+// }
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
@@ -20,10 +36,9 @@ export async function login(formData: FormData) {
     return { errorMessage: error.message }
   }
 
-//   revalidatePath('/', 'layout')
+  revalidatePath('/', 'layout')
   redirect('/profile')
 }
-
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
