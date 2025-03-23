@@ -1,14 +1,23 @@
 "use client";
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-// import { useAuth } from '@/hooks/useAuth'
+import { Button } from '@/components/ui/button';
+import { fetchUserCityAndState } from '@/lib/location';
+import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/server';
+import { LoaderCircle } from 'lucide-react';
 
 interface ProfileData {
   // Basic Information
   name: string
   age: number | null
   gender: string
-  location: string
+  currrent_weight: number | null
+  target_weight: number | null
+  location: {
+    city: string
+    state: string
+  }
   // Dietary Preferences
   dietary_restrictions: string[]
   allergies: string[]
@@ -41,7 +50,6 @@ interface ProfileData {
 
 export default function ProfilePage() {
   const router = useRouter()
-//   const { user } = useAuth()
   const [currentSection, setCurrentSection] = useState(1)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -50,7 +58,9 @@ export default function ProfilePage() {
     name: '',
     age: null,
     gender: '',
-    location: '',
+    currrent_weight: null,
+    target_weight: null,
+    location: { city: '', state: '' },
     dietary_restrictions: [],
     allergies: [],
     dislikes: [],
@@ -75,65 +85,94 @@ export default function ProfilePage() {
     sustainability: [],
   })
 
-//   useEffect(() => {
-//     if (user) {
-//       fetchProfile()
-//     }
-//   }, [user])
+  // useEffect(() => {
+  //   const fetchProfile = async () => {
+  //     try {
+  //       const supabase = createClientComponentClient()
+  //       const { data: { user } } = await supabase.auth.getUser()
 
-//   const fetchProfile = async () => {
-//     try {
-//       const response = await fetch(`/api/profile?userId=${user?.id}`)
-//       const data = await response.json()
-//       if (data.data) {
-//         setProfile(data.data)
-//       }
-//     } catch (err) {
-//       setError('Failed to load profile')
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
+  //       if (user) {
+  //         const response = await fetch(`/api/profile?userId=${user.id}`)
+  //         const data = await response.json()
+  //         if (data.data) {
+  //           setProfile(data.data)
+  //         }
+  //       }
+  //     } catch (err) {
+  //       setError('Failed to load profile')
+  //     } finally {
+  //       setLoading(false)
+  //     }
+  //   }
+
+  //   fetchProfile()
+  // }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     setError('')
-    console.log("profile created - ", profile);
+    console.log("profile = ", profile);
+    // const supabase = await createClient()
+    // const { data: { user } } = await supabase.auth.getUser()
+    // const userId = user?.id
+    // console.log("userId = ", userId);
 
-    // try {
-    //   const response = await fetch('/api/profile', {
-    //     method: 'PUT',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({
-    //       userId: user?.id,
-    //       ...profile,
-    //     }),
-    //   })
 
-    //   const data = await response.json()
+    try {
 
-    //   if (!response.ok) {
-    //     throw new Error(data.error || 'Failed to save profile')
-    //   }
+      const response = await fetch('/api/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          // userId: user?.id,
+          ...profile,
+        }),
+      })
 
-    //   router.push('/dashboard')
-    // } catch (err) {
-    //   setError(err instanceof Error ? err.message : 'Failed to save profile')
-    // } finally {
-    //   setSaving(false)
-    // }
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save profile')
+      }
+
+      toast.success('Profile updated successfully')
+      router.push('/dashboard')
+    } catch (err) {
+      console.log("error = ", err);
+      setError(err instanceof Error ? err.message : 'Failed to save profile')
+      toast.error('Failed to save profile')
+    } finally {
+      setSaving(false)
+    }
+  }
+  const [inputValue, setInputValue] = useState<string>('');
+
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const findlocation = async () => {
+    const locationData = await fetchUserCityAndState();
+
+    if (!locationData || locationData.city === undefined || locationData.state === undefined) {
+      return toast.error("Unable to fetch location, enter manually")
+    }
+    setProfile({ ...profile, location: { city: locationData.city, state: locationData.state } });
   }
 
-//   if (loading) {
-//     return (
-//       <div className="min-h-screen bg-orange-50 flex items-center justify-center">
-//         <div className="text-orange-600">Loading...</div>
-//       </div>
-//     )
-//   }
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const [city, state] = inputValue.split(',').map((part) => part.trim());
+      setProfile({
+        ...profile,
+        location: { city, state },
+      }); // Clear the input after saving
+    }
+  };
 
   const sections = [
     { id: 1, title: 'Basic Information' },
@@ -154,17 +193,17 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
-            <input
-              type="text"
-              value={profile.name}
+                <input
+                  type="text"
+                  value={profile.name}
                   onChange={(e) => setProfile({ ...profile, name: e.target.value })}
                   className="text-black mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 placeholder:text-gray-700"
-            />
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Age</label>
-            <input
-              type="number"
+                <input
+                  type="number"
                   value={profile.age || ''}
                   onChange={(e) => setProfile({ ...profile, age: parseInt(e.target.value) || null })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 text-black focus:ring-orange-500 placeholder:text-gray-700"
@@ -172,8 +211,8 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Gender</label>
-            <select
-              value={profile.gender}
+                <select
+                  value={profile.gender}
                   onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
                   className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
                 >
@@ -181,17 +220,53 @@ export default function ProfilePage() {
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                   <option value="other">Other</option>
-            </select>
+                </select>
+              </div>
+              <div >
+                <label className="block text-sm font-medium text-gray-700">Location</label>
+
+                <div className='flex items-center gap-2'>
+
+                  {profile.location.city !== '' && profile.location.state !== '' ?
+
+                    <h1 className='text-lg text-gray-900' >{profile.location.city}, {profile.location.state}</h1> :
+
+
+                    <input type="text"
+                      onKeyDown={handleKeyDown}
+                      onChange={handleInputChange}
+                      placeholder='Enter city, state'
+                      className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 text-black focus:ring-orange-500 placeholder:text-gray-500 placeholder:text-sm'
+                    />
+                  }
+
+                  <Button type='button' className='bg-orange-500 text-white rounded-md cursor-pointer' size="sm" onClick={findlocation}
+                  >
+                    Find Location
+                  </Button>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Location</label>
-            <input
-              type="text"
-              value={profile.location}
-                  onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 placeholder:text-gray-700"
-            />
-          </div>
+                <label className="block text-sm font-medium text-gray-700">current weight</label>
+                <input
+                  type="number"
+                  value={profile.currrent_weight || ''}
+                  placeholder='in kg'
+                  onChange={(e) => setProfile({ ...profile, currrent_weight: parseInt(e.target.value) || null })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 text-black focus:ring-orange-500 placeholder:text-gray-500 placeholder:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">target weight</label>
+                <input
+                  type="number"
+                  value={profile.target_weight || ''}
+                  placeholder='in kg'
+                  onChange={(e) => setProfile({ ...profile, target_weight: parseInt(e.target.value) || null })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 text-black focus:ring-orange-500 placeholder:text-gray-500 placeholder:text-sm"
+                />
+              </div>
+
             </div>
           </section>
         )
@@ -209,7 +284,7 @@ export default function ProfilePage() {
                     const values = Array.from(e.target.selectedOptions, option => option.value)
                     setProfile({ ...profile, dietary_restrictions: values })
                   }}
-                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  className="mt-1 text-black block w-full rounded-md border-gray-900 shadow-sm focus:border-orange-500 focus:ring-orange-500"
                 >
                   <option value="vegetarian">Vegetarian</option>
                   <option value="vegan">Vegan</option>
@@ -225,7 +300,7 @@ export default function ProfilePage() {
                   value={profile.allergies.join(', ')}
                   onChange={(e) => setProfile({ ...profile, allergies: e.target.value.split(',').map(s => s.trim()) })}
                   placeholder="Enter allergies separated by commas"
-                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 placeholder:text-gray-700"
+                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 placeholder:text-gray-500 placeholder:text-sm"
                 />
               </div>
               <div>
@@ -235,7 +310,7 @@ export default function ProfilePage() {
                   value={profile.dislikes.join(', ')}
                   onChange={(e) => setProfile({ ...profile, dislikes: e.target.value.split(',').map(s => s.trim()) })}
                   placeholder="Enter disliked foods separated by commas"
-                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 placeholder:text-gray-700"
+                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 placeholder:text-gray-500 placeholder:text-sm"
                 />
               </div>
             </div>
@@ -245,15 +320,15 @@ export default function ProfilePage() {
         return (
           <section className="border-b border-orange-100 pb-6">
             <h2 className="text-xl font-semibold text-orange-700 mb-4">Health Goals</h2>
-          <div className="space-y-4">
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Primary Goal</label>
                 <select
                   value={profile.primary_goal}
                   onChange={(e) => setProfile({ ...profile, primary_goal: e.target.value })}
-                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 placeholder:text-gray-500 placeholder:text-sm"
                 >
-                  <option value="">Select primary goal</option>
+                  <option value="" className='text-gray-500'>Select primary goal</option>
                   <option value="weight_loss">Weight Loss</option>
                   <option value="muscle_gain">Muscle Gain</option>
                   <option value="maintenance">Maintenance</option>
@@ -262,7 +337,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Daily Calorie Intake</label>
-              <input
+                <input
                   type="number"
                   value={profile.calorie_intake || ''}
                   onChange={(e) => setProfile({ ...profile, calorie_intake: parseInt(e.target.value) || null })}
@@ -274,7 +349,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-3 gap-4 mt-2">
                   <div>
                     <label className="block text-xs text-gray-500">Protein (%)</label>
-              <input
+                    <input
                       type="number"
                       value={profile.macronutrient_preferences.protein}
                       onChange={(e) => setProfile({
@@ -289,7 +364,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500">Carbs (%)</label>
-              <input
+                    <input
                       type="number"
                       value={profile.macronutrient_preferences.carbs}
                       onChange={(e) => setProfile({
@@ -304,7 +379,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500">Fats (%)</label>
-            <input
+                    <input
                       type="number"
                       value={profile.macronutrient_preferences.fats}
                       onChange={(e) => setProfile({
@@ -315,8 +390,8 @@ export default function ProfilePage() {
                         }
                       })}
                       className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-            />
-          </div>
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -354,7 +429,7 @@ export default function ProfilePage() {
                   <option value="more">More than 1 hour</option>
                 </select>
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700">Kitchen Tools</label>
                 <select
                   multiple
@@ -372,7 +447,7 @@ export default function ProfilePage() {
                   <option value="air_fryer">Air Fryer</option>
                   <option value="instant_pot">Instant Pot</option>
                 </select>
-              </div>
+              </div> */}
             </div>
           </section>
         )
@@ -383,6 +458,7 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div>
                 <label className="block  text-sm font-medium text-gray-700">Meal Types</label>
+                <span className="text-xs text-gray-500">{"Hold down the Ctrl (windows) or Command (Mac) button to select multiple options."}</span>
                 <select
                   multiple
                   value={profile.meal_types}
@@ -390,7 +466,7 @@ export default function ProfilePage() {
                     const values = Array.from(e.target.selectedOptions, option => option.value)
                     setProfile({ ...profile, meal_types: values })
                   }}
-                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  className="mt-1 text-black block w-full rounded-md border-gray-900 shadow-sm focus:border-orange-500 focus:ring-orange-500"
                 >
                   <option value="breakfast">Breakfast</option>
                   <option value="lunch">Lunch</option>
@@ -524,7 +600,7 @@ export default function ProfilePage() {
                     const values = Array.from(e.target.selectedOptions, option => option.value)
                     setProfile({ ...profile, sustainability: values })
                   }}
-                  className="mt-1 text-black  block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  className="mt-1 text-black block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
                 >
                   <option value="organic">Organic ingredients</option>
                   <option value="local">Local produce</option>
@@ -539,21 +615,21 @@ export default function ProfilePage() {
     }
   }
 
+
   return (
     <div className="min-h-screen bg-orange-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h1 className="text-3xl font-bold text-orange-600 mb-8">Your Profile</h1>
-          
+
           {/* Progress bar */}
           <div className="mb-8">
             <div className="flex justify-between mb-2">
               {sections.map((section) => (
                 <div
                   key={section.id}
-                  className={`flex-1 text-center ${
-                    section.id === currentSection ? 'text-orange-600 font-semibold' : 'text-gray-500'
-                  }`}
+                  className={`flex-1 text-center ${section.id === currentSection ? 'text-orange-600 font-semibold' : 'text-gray-500'
+                    }`}
                 >
                   {/* {section.title} */}
                 </div>
@@ -565,7 +641,7 @@ export default function ProfilePage() {
                 style={{ width: `${(currentSection / sections.length) * 100}%` }}
               />
             </div>
-        </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {renderSection()}
@@ -584,22 +660,25 @@ export default function ProfilePage() {
                 Previous
               </button>
               {currentSection === sections.length ? (
-            <button
+                <button
                   type="submit"
                   disabled={saving}
                   className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
-            >
-                  {saving ? 'Saving...' : 'Save Profile'}
-            </button>
+                >
+                  {saving ? <LoaderCircle className='animate-spin' /> : 'Save Profile'}
+                </button>
               ) : (
-            <button
+                <button
                   type="button"
-                  onClick={() => setCurrentSection(prev => Math.min(sections.length, prev + 1))}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentSection(prev => Math.min(sections.length, prev + 1));
+                  }}
                   className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              Next
-            </button>
-          )}
+                >
+                  Next
+                </button>
+              )}
             </div>
           </form>
         </div>

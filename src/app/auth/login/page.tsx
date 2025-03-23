@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { login } from '../action'
 import { toast } from 'sonner'
@@ -18,37 +18,21 @@ export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
 
     
-
-//     // const handleSubmit = () => {
-      
-//     //   let formData = new FormData();
-//     //   formData.append("email", email);
-//     //   formData.append("password", password);
-//     //     startTransition(async () => {
-//     //         const { errorMessage } = await login(formData);
-//     //         if (errorMessage) {
-//     //             toast.error(errorMessage);
-//     //             console.log(errorMessage);
-                
-//     //         } else {
-//     //             toast.success("Successfully logged in");
-//     //             router.push("/profile");
-//     //         }
-//     //     });
-//     // };
-  
-const handleSubmit = () => {
-    
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
   const formData = new FormData()
     formData.append('email', email)
     formData.append('password', password)
     startTransition(async () => {
       const { errorMessage } = await login(formData);
       if (errorMessage) {
+        console.log(errorMessage);
+        
           toast.error(errorMessage);
+          redirect("/auth/login");
       } else {
           toast.success("Successfully logged in");
-          router.push("/");
+          redirect("/profile");
       }
   });
 

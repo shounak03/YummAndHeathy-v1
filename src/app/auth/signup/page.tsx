@@ -32,10 +32,10 @@ export default function SignupPage() {
       if (errorMessage) {
         toast.error(errorMessage)
         console.log(errorMessage);
-        redirect('/profile')
         
       } else {
         toast.success('Account created successfully')
+        redirect('/profile')
       }
     } catch (error) {
       toast.error('An error occurred during signup')
