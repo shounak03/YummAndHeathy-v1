@@ -1,11 +1,11 @@
 "use client";
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { redirect, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button';
 import { fetchUserCityAndState } from '@/lib/location';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/server';
 import { LoaderCircle } from 'lucide-react';
+import { checkUser } from '../auth/action';
 
 interface ProfileData {
   // Basic Information
@@ -112,14 +112,15 @@ export default function ProfilePage() {
     e.preventDefault()
     setSaving(true)
     setError('')
-    console.log("profile = ", profile);
-    // const supabase = await createClient()
-    // const { data: { user } } = await supabase.auth.getUser()
-    // const userId = user?.id
-    // console.log("userId = ", userId);
-
-
+    
     try {
+      const userId = await checkUser()
+      console.log("userId = ", userId);
+      if (!userId) {
+        throw new Error('User not authenticated')
+      }
+
+      console.log("starting to save, profile = ", profile);
 
       const response = await fetch('/api/profile', {
         method: 'POST',
@@ -127,10 +128,12 @@ export default function ProfilePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          // userId: user?.id,
+          userId,
           ...profile,
         }),
       })
+
+      console.log("after save",response);
 
       const data = await response.json()
 
@@ -148,6 +151,8 @@ export default function ProfilePage() {
       setSaving(false)
     }
   }
+
+  
   const [inputValue, setInputValue] = useState<string>('');
 
   // Handle input change

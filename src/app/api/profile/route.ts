@@ -1,3 +1,5 @@
+import { createClient } from '@/lib/supabase/server'
+
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -28,14 +30,21 @@ export async function GET(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id
+      console.log("in api");
+      if (!userId) {
+        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+      }
     const {
-      userId,
       name,
       age,
       gender,
+      current_weight,
+      target_weight,
       location,
       dietary_restrictions,
       allergies,
@@ -57,10 +66,21 @@ export async function PUT(request: Request) {
       sustainability
     } = await request.json()
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
-    }
 
+
+    // Validate macronutrient preferences sum to 100
+    if (macronutrient_preferences) {
+      const { protein, carbs, fats } = macronutrient_preferences
+      const total = protein + carbs + fats
+      if (total !== 100) {
+        return NextResponse.json(
+          { error: 'Macronutrient preferences must sum to 100%' },
+          { status: 400 }
+        )
+      }
+    }
+    console.log("trying to save");
+    
     const { data, error } = await supabase
       .from('profiles')
       .upsert({
@@ -68,6 +88,8 @@ export async function PUT(request: Request) {
         name,
         age,
         gender,
+        current_weight,
+        target_weight,
         location,
         dietary_restrictions,
         allergies,
@@ -93,6 +115,8 @@ export async function PUT(request: Request) {
       .single()
 
     if (error) {
+      console.log(error);
+      
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 

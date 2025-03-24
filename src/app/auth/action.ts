@@ -54,3 +54,12 @@ export async function logout() {
   revalidatePath('/', 'layout')
   redirect('/auth/login')
 }
+
+export async function checkUser() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('User not authenticated')
+  }
+  return user?.id;
+}

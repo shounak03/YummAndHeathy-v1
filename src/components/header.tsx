@@ -12,13 +12,20 @@ export default async function Header() {
   const { data: { user } } = await supabase.auth.getUser()
 
 
+
   return (
     <header className="sticky top-0 z-40 border-b bg-white">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-8">
           <Utensils className="h-6 w-6 text-orange-500" />
           <span className="text-xl text-orange-500 font-bold">RecipeAI</span>
         </div>
+        <div className="flex items-center gap-2">
+          <Button size={"sm"} type='submit' variant={"outline"}
+              className={"bg-white text-orange-500 hover:bg-gray-800 hover:text-white"}>
+                about
+          </Button>
+        
         {user !== null ? (
           <form action={async () => {
             'use server'
@@ -41,7 +48,7 @@ export default async function Header() {
           </Link>
           </div>
         )}
-          
+          </div>
         </div>
     </header>
   )
