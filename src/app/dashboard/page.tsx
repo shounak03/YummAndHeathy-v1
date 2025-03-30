@@ -111,34 +111,11 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-orange-50">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b bg-white">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Utensils className="h-6 w-6 text-orange-500" />
-            <span className="text-xl font-bold">RecipeAI</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
-              <Calendar className="h-5 w-5 text-gray-500" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <BarChart3 className="h-5 w-5 text-gray-500" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="relative h-8 w-8 rounded-full overflow-hidden">
-                <Image src={user.avatar || "/placeholder.svg"} alt={user.name} fill className="object-cover" />
-              </div>
-              <span className="text-sm font-medium hidden sm:inline-block">{user.name}</span>
-            </div>
-          </div>
-        </div>
-      </header>
 
       <main className="flex-1 py-8">
-        <div className="container">
+        <div className="container mx-auto max-w-7xl px-4">
           {/* Welcome Section */}
-          <div className="mb-8">
+          <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold mb-2">Welcome back, {user.name.split(" ")[0]}!</h1>
             <p className="text-gray-600">Here's an overview of your nutrition and recipes.</p>
           </div>
