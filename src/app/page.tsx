@@ -42,7 +42,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Features Section */}
         <section id="features" className="py-16 md:py-24 bg-white">
           <div className="container">
             <div className="text-center mb-12">
@@ -246,7 +245,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA Section */}
         <section className="py-16 md:py-24 bg-white">
           <div className="container">
             <div className="bg-gradient-to-r from-orange-500 to-orange-400 rounded-2xl p-8 md:p-12 text-white">

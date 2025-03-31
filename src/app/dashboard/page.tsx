@@ -2,7 +2,7 @@
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { BarChart3, Calendar, ChevronRight, FlameIcon as Fire, Plus, Utensils } from "lucide-react"
-
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -357,13 +357,14 @@ export default function DashboardPage() {
 
           {/* Generate New Recipe Button */}
           <div className="flex justify-center">
+            <Link href={"/chat"}>
             <Button
               className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg gap-2"
-              onClick={() => router.push("/chat")}
-            >
+              >
               <Plus className="h-5 w-5" />
               Generate New Recipe
             </Button>
+              </Link>
           </div>
         </div>
       </main>
