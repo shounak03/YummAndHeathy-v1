@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import OpenAi from 'openai'
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY
 const DEEPSEEK_API_URL = 'https://api.deepseek.com'
@@ -117,14 +118,11 @@ Format the response as a JSON object with the following structure:
   ]
 }`
 
-    // Call DeepSeek API
-    const response = await fetch(DEEPSEEK_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-      },
-      body: JSON.stringify({
+
+    const client = new OpenAi({apiKey:DEEPSEEK_API_KEY, baseURL : DEEPSEEK_API_URL})
+
+
+      const response = await client.chat.completions.create({
         model: 'deepseek-chat',
         messages: [
           {
@@ -137,32 +135,34 @@ Format the response as a JSON object with the following structure:
           }
         ],
         temperature: 0.7,
-        max_tokens: 2000
       })
-    })
+      
+      console.log(response.choices[0])
+    
+    // console.log(re.choices[0].message.content);
 
-    if (!response.ok) {
-      throw new Error(`DeepSeek API error: ${response.statusText}`)
-    }
+    // if (!response.ok) {
+    //   throw new Error(`DeepSeek API error: ${response.statusText}`)
+    // }
 
-    const data = await response.json()
-    const recipes = JSON.parse(data.choices[0].message.content)
+    // const data = await response.json()
+    // const recipes = JSON.parse(data.choices[0].message.content)
 
     // Save the generated recipes to the database
-    const { error: saveError } = await supabase
-      .from('generated_recipes')
-      .insert({
-        user_id: userId,
-        recipes: recipes,
-        generated_at: new Date().toISOString()
-      })
+    // const { error: saveError } = await supabase
+    //   .from('generated_recipes')
+    //   .insert({
+    //     user_id: userId,
+    //     recipes: recipes,
+    //     generated_at: new Date().toISOString()
+    //   })
 
-    if (saveError) {
-      console.error('Error saving generated recipes:', saveError)
-      return NextResponse.json({ error: 'Failed to save recipes' }, { status: 500 })
-    }
+    // if (saveError) {
+    //   console.error('Error saving generated recipes:', saveError)
+    //   return NextResponse.json({ error: 'Failed to save recipes' }, { status: 500 })
+    // }
 
-    return NextResponse.json({ recipes })
+    // return NextResponse.json({ recipes })
   } catch (error) {
     console.error('Error in chat API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
