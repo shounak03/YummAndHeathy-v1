@@ -1,17 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { GoogleGenAI } from "@google/genai";
-import OpenAi from 'openai'
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY
-const DEEPSEEK_API_URL = "https://openrouter.ai/api/v1"
+
+
 
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const userId = user?.id
-    const {message} = request.json();
+    const { message } = request.json();
 
     if (!userId) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
@@ -125,55 +124,64 @@ Format the response as a JSON object with the following structure:
       model: "gemini-2.0-flash",
       contents: prompt
     });
-    console.log(response.text);
+    console.log("recipe = ",response.text);
+
+    const text = response?.text
+    const cleanedText = text
+    .replace(/```json\n?/g, '') // Remove ```json
+    .replace(/```\n?/g, '')     // Remove ```
+    .trim()                     // Remove whitespace
+  
+  try {
+      const recipes = JSON.parse(cleanedText)
+      return NextResponse.json(recipes)
+    } catch (error) {
+      console.error('Error parsing Gemini response:', error)
+      return NextResponse.json({ error: 'Failed to parse recipe response' }, { status: 500 })
+    }
 
 
-    // const client = new OpenAi({apiKey:DEEPSEEK_API_KEY, baseURL : DEEPSEEK_API_URL})
-
-
-      // const response = await client.chat.completions.create({
-      //   model: "deepseek/deepseek-v3-base:free",
-      //   messages: [
-      //     {
-      //       role: 'system',
-      //       content: 'You are a professional nutritionist and chef specializing in personalized recipe generation.'
-      //     },
-      //     {
-      //       role: 'user',
-      //       content: "hello there"
-      //     }
-      //   ],
-      //   temperature: 0.7,
-      // })
-      
-      // console.log(response)
-    
-    // console.log(re.choices[0].message.content);
-
-    // if (!response.ok) {
-    //   throw new Error(`DeepSeek API error: ${response.statusText}`)
-    // }
-
-    // const data = await response.json()
-    // const recipes = JSON.parse(data.choices[0].message.content)
-
-    // Save the generated recipes to the database
-    // const { error: saveError } = await supabase
-    //   .from('generated_recipes')
-    //   .insert({
-    //     user_id: userId,
-    //     recipes: recipes,
-    //     generated_at: new Date().toISOString()
-    //   })
-
-    // if (saveError) {
-    //   console.error('Error saving generated recipes:', saveError)
-    //   return NextResponse.json({ error: 'Failed to save recipes' }, { status: 500 })
-    // }
-
-    // return NextResponse.json({ recipes })
   } catch (error) {
     console.error('Error in chat API:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { recipe } = body
+
+    if (!recipe) {
+      return NextResponse.json({ error: 'Recipe data is required' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from('saved_recipes')
+      .insert({
+        user_id: userId,
+        recipe_data: recipe,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error saving recipe:', error)
+      return NextResponse.json({ error: 'Failed to save recipe' }, { status: 500 })
+    }
+
+    return NextResponse.json({ id: data.id })
+  } catch (error) {
+    console.error('Error in recipe API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

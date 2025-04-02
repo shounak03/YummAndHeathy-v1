@@ -3,14 +3,14 @@ import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
 
-    const supabase = await createClient()
     const { data, error } = await supabase
       .from('saved_recipes')
       .select('*')
@@ -18,16 +18,18 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error fetching saved recipes:', error)
+      return NextResponse.json({ error: 'Failed to fetch saved recipes' }, { status: 500 })
     }
 
-    return NextResponse.json({ data })
+    return NextResponse.json(data)
   } catch (error) {
+    console.error('Error in recipes API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-export async function POST(request: Request) {
+export async function PUT(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -37,9 +39,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 })
     }
 
-    const recipe = await request.json()
+    const body = await request.json()
+    const { recipe } = body
 
-    // Save recipe
+    if (!recipe) {
+      return NextResponse.json({ error: 'Recipe data is required' }, { status: 400 })
+    }
+
     const { data, error } = await supabase
       .from('saved_recipes')
       .insert({
@@ -52,7 +58,7 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Error saving recipe:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to save recipe' }, { status: 500 })
     }
 
     return NextResponse.json({ id: data.id })
