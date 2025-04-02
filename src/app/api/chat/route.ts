@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { GoogleGenAI } from "@google/genai";
 import OpenAi from 'openai'
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY
-const DEEPSEEK_API_URL = 'https://api.deepseek.com'
+const DEEPSEEK_API_URL = "https://openrouter.ai/api/v1"
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     }
 
     // Create a detailed prompt based on user preferences
-    const prompt = `You are a professional nutritionist and chef. Generate 3 personalized recipes based on the following user preferences:
+    const prompt = `You are a professional nutritionist and chef. Generate personalized recipes based on the following user preferences:
 
    
 
@@ -118,26 +119,34 @@ Format the response as a JSON object with the following structure:
   ]
 }`
 
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    const client = new OpenAi({apiKey:DEEPSEEK_API_KEY, baseURL : DEEPSEEK_API_URL})
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt
+    });
+    console.log(response.text);
 
 
-      const response = await client.chat.completions.create({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional nutritionist and chef specializing in personalized recipe generation.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-      })
+    // const client = new OpenAi({apiKey:DEEPSEEK_API_KEY, baseURL : DEEPSEEK_API_URL})
+
+
+      // const response = await client.chat.completions.create({
+      //   model: "deepseek/deepseek-v3-base:free",
+      //   messages: [
+      //     {
+      //       role: 'system',
+      //       content: 'You are a professional nutritionist and chef specializing in personalized recipe generation.'
+      //     },
+      //     {
+      //       role: 'user',
+      //       content: "hello there"
+      //     }
+      //   ],
+      //   temperature: 0.7,
+      // })
       
-      console.log(response.choices[0])
+      // console.log(response)
     
     // console.log(re.choices[0].message.content);
 
