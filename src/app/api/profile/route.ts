@@ -1,9 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { pipeline } from '@xenova/transformers'
-
-// Initialize the embedding model
-const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')
 
 export async function GET(request: Request) {
   try {
@@ -80,44 +76,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Create a text representation of the profile data for embedding
-    const profileText = `
-      Name: ${name || ''}
-      Age: ${age || ''}
-      Gender: ${gender || ''}
-      Current Weight: ${current_weight || ''}
-      Target Weight: ${target_weight || ''}
-      Location: ${location || ''}
-      Dietary Restrictions: ${dietary_restrictions || ''}
-      Allergies: ${allergies || ''}
-      Dislikes: ${dislikes || ''}
-      Primary Goal: ${primary_goal || ''}
-      Calorie Intake: ${calorie_intake || ''}
-      Macronutrient Preferences: ${JSON.stringify(macronutrient_preferences || {})}
-      Cooking Skill Level: ${cooking_skill_level || ''}
-      Time Availability: ${time_availability || ''}
-      Kitchen Tools: ${kitchen_tools || ''}
-      Meal Types: ${meal_types || ''}
-      Cuisine Preferences: ${cuisine_preferences || ''}
-      Portion Size: ${portion_size || ''}
-      Activity Level: ${activity_level || ''}
-      Eating Out Frequency: ${eating_out_frequency || ''}
-      Food Budget: ${food_budget || ''}
-      Spice Tolerance: ${spice_tolerance || ''}
-      Meal Variety: ${meal_variety || ''}
-      Sustainability: ${sustainability || ''}
-    `.trim()
-
-    // Generate embedding
-    const embedding = await embedder(profileText, {
-      pooling: 'mean',
-      normalize: true
-    })
-
-    // Convert embedding from object to array format for pgvector
-    const embeddingArray = Object.values(embedding.data)
-
-    // Save profile data and embedding
     const { data, error } = await supabase
       .from('profiles')
       .upsert({
@@ -146,7 +104,6 @@ export async function POST(request: Request) {
         spice_tolerance,
         meal_variety,
         sustainability,
-        embedding: embeddingArray,
         updated_at: new Date().toISOString()
       })
       .select()
@@ -189,10 +146,11 @@ export async function PUT(request: Request) {
       console.error('Error updating profile:', error)
       return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
     }
-
+    NextResponse.redirect('/dashboard')
     return NextResponse.json({ message: 'Profile updated successfully' })
   } catch (error) {
     console.error('Error in profile update:', error)
+    
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 } 

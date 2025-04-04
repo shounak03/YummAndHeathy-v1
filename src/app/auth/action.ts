@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { AuthError } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -69,4 +70,20 @@ export async function fetchUser() {
     const supabase = await createClient();
     const user = supabase.auth.getUser()
     return user
+}
+
+export const providerSignIn = async() =>{
+  const supabase = await createClient();
+  const callbackUrl = `http://localhost:3000/api/auth/callback`
+ 
+  const {data,error}= await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options:{
+      redirectTo : callbackUrl
+    }
+  })
+  if(error){
+    throw new AuthError(error.message)
+  }
+  redirect(data.url ?? "")
 }

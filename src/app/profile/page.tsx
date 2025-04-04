@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner'
 import { fetchUser } from '../auth/action'
 import { supabase } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 interface Profile {
   id: string
@@ -30,6 +31,7 @@ interface Profile {
 type SelectValueType = 'beginner' | 'intermediate' | 'advanced' | 'budget' | 'moderate' | 'premium' | 'low' | 'medium' | 'high' | 'quick' | 'moderate' | 'extended'
 
 export default function ProfilePage() {
+  const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -51,6 +53,13 @@ export default function ProfilePage() {
         .single()
 
       if (error) throw error
+
+      if (!data) {
+        // If no profile exists, redirect to create profile page
+        router.push('/create-profile')
+        return
+      }
+
       setProfile(data)
     } catch (err) {
       console.error('Error fetching profile:', err)
@@ -62,7 +71,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     fetchProfile()
-  }, [])
+  }, [router])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()

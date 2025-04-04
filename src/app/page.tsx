@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { BarChart2, Calendar, Heart, ShoppingCart, Utensils } from "lucide-react";
 import Image from "next/image";
 
+
 export default function Home() {
   return (
     <main className="flex flex-col items-center">
@@ -17,21 +18,12 @@ export default function Home() {
                 Create personalized recipes based on ingredients you have and dietary preferences you follow. Get
                 nutritional analysis, meal plans, and simplified grocery shopping.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                <div className="relative flex-1">
-                  <Input
-                    placeholder="Enter your email"
-                    className="pr-32 h-12 border-orange-200 focus-visible:ring-orange-500"
-                  />
-                  <Button className="absolute right-1 top-1 h-10 bg-orange-500 hover:bg-orange-600">Get Started</Button>
-                </div>
-              </div>
-              <p className="text-sm text-gray-500">Join 10,000+ home chefs already creating amazing meals</p>
+      
             </div>
             <div className="lg:w-1/2">
               <div className="relative h-[400px] w-full lg:h-[500px]">
                 <Image
-                  src="/placeholder.svg?height=500&width=600"
+                  src="/hero-image.png"
                   alt="AI Recipe Generator Dashboard"
                   fill
                   className="object-contain"
