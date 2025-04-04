@@ -162,4 +162,37 @@ export async function POST(request: Request) {
     console.error('Error in profile API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { profile } = body
+
+    if (!profile) {
+      return NextResponse.json({ error: 'Profile data is required' }, { status: 400 })
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(profile)
+      .eq('id', user.id)
+
+    if (error) {
+      console.error('Error updating profile:', error)
+      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+    }
+
+    return NextResponse.json({ message: 'Profile updated successfully' })
+  } catch (error) {
+    console.error('Error in profile update:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 } 

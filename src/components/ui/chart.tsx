@@ -4,6 +4,18 @@ interface ChartProps {
   children: React.ReactNode
 }
 
+interface ChartPoint {
+  date: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+}
+
+interface ChartTooltipProps {
+  children: React.ComponentType<{ point: ChartPoint }>
+}
+
 export const Chart = ({ children }: ChartProps) => {
   return <div className="chart">{children}</div>
 }
@@ -15,7 +27,12 @@ export const ChartContainer = ({
   children,
 }: { data: any[]; xAxisKey: string; yAxisKey: string; children: React.ReactNode }) => {
   return (
-    <div className="chart-container" data-x-axis-key={xAxisKey} data-y-axis-key={yAxisKey} data={JSON.stringify(data)}>
+    <div 
+      className="chart-container" 
+      data-x-axis-key={xAxisKey} 
+      data-y-axis-key={yAxisKey} 
+      data-chart-data={JSON.stringify(data)}
+    >
       {children}
     </div>
   )
@@ -26,7 +43,15 @@ export const ChartGrid = () => {
 }
 
 export const ChartLine = ({ y, className, strokeWidth }: { y: number; className?: string; strokeWidth?: number }) => {
-  return <div className={`chart-line ${className}`} style={{ "--y": y, "--stroke-width": strokeWidth }}></div>
+  return (
+    <div 
+      className={`chart-line ${className}`} 
+      style={{ 
+        top: `${y}%`,
+        borderWidth: strokeWidth ? `${strokeWidth}px` : undefined 
+      }}
+    />
+  )
 }
 
 export const ChartLineLayer = ({
@@ -49,8 +74,8 @@ export const ChartYAxis = () => {
   return <div className="chart-y-axis"></div>
 }
 
-export const ChartTooltip = ({ children }: ChartProps) => {
-  return <div className="chart-tooltip">{children}</div>
+export const ChartTooltip = ({ children: TooltipContent }: ChartTooltipProps) => {
+  return <div className="chart-tooltip"><TooltipContent /></div>
 }
 
 export const ChartTooltipContent = ({ children }: ChartProps) => {

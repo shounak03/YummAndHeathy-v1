@@ -64,3 +64,9 @@ export async function checkUser() {
   }
   return user?.id;
 }
+
+export async function fetchUser() {
+    const supabase = await createClient();
+    const user = supabase.auth.getUser()
+    return user
+}

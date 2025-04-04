@@ -1,12 +1,13 @@
 "use client"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { BarChart3, Calendar, ChevronRight, FlameIcon as Fire, Plus, Utensils } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
+import { ChevronRight, Plus } from 'lucide-react'
+import Link from 'next/link'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   ChartContainer,
   ChartGrid,
@@ -17,354 +18,478 @@ import {
   ChartXAxis,
   ChartYAxis,
   ChartBarLayer,
-} from "@/components/ui/chart"
+} from '@/components/ui/chart'
+
+import { fetchUser } from '../auth/action'
+
+interface SavedRecipe {
+  id: string
+  recipe_data: {
+    name: string
+    prep_time: string
+    cook_time: string
+    difficulty: string
+    servings: number
+    nutrition: {
+      calories: number
+      protein: number
+      carbs: number
+      fat: number
+      fiber: number
+      sugar: number
+      sodium: number
+    }
+    cost_per_serving: string
+    sustainability_score: number
+  }
+  created_at: string
+}
+
+interface DailyNutrition {
+  date: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+}
+
+interface ChartPoint {
+  date: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+}
 
 export default function DashboardPage() {
-  const router = useRouter()
+  const [savedRecipes, setSavedRecipes] = useState<SavedRecipe[]>([])
+  const [dailyNutrition, setDailyNutrition] = useState<DailyNutrition[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Mock data for the dashboard
-  const user = {
-    name: "Sarah Johnson",
-    avatar: "/placeholder.svg?height=40&width=40",
-    dailyCalorieGoal: 2000,
-    dailyProteinGoal: 120,
-    dailyCarbsGoal: 200,
-    dailyFatGoal: 65,
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        console.log('Fetching user data...')
+        const userResponse = await fetchUser()
+        console.log("User response:", userResponse)
+
+        
+
+        if (!userResponse || !userResponse.data?.user) {
+          console.error('No user found')
+          setError('Authentication required')
+          setIsLoading(false)
+          return
+        }
+
+        const user = userResponse.data.user
+        setUserId(user.id)
+        console.log('User ID set:', user.id)
+
+        console.log('Fetching profile...')
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError) {
+          console.error('Profile error:', profileError)
+          setError('Error fetching profile')
+          setIsLoading(false)
+          return
+        }
+
+        setUserProfile(profile)
+        console.log('Profile fetched:', profile)
+
+        console.log('Fetching saved recipes...')
+        const { data: recipes, error: recipesError } = await supabase
+          .from('saved_recipes')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (recipesError) {
+          console.error('Recipes error:', recipesError)
+          setError('Error fetching recipes')
+          setIsLoading(false)
+          return
+        }
+
+        console.log('Recipes fetched:', recipes)
+        if (recipes) {
+          setSavedRecipes(recipes)
+
+          // Calculate daily nutrition for the past 7 days
+          const today = new Date()
+          const sevenDaysAgo = new Date(today)
+          sevenDaysAgo.setDate(today.getDate() - 7)
+
+          const dailyData: { [key: string]: DailyNutrition } = {}
+          
+          recipes.forEach((recipe: SavedRecipe) => {
+            const recipeDate = new Date(recipe.created_at)
+            if (recipeDate >= sevenDaysAgo) {
+              const dateKey = recipeDate.toISOString().split('T')[0]
+              if (!dailyData[dateKey]) {
+                dailyData[dateKey] = {
+                  date: dateKey,
+                  calories: 0,
+                  protein: 0,
+                  carbs: 0,
+                  fat: 0
+                }
+              }
+              
+              const nutrition = recipe.recipe_data.nutrition
+              dailyData[dateKey].calories += nutrition.calories
+              dailyData[dateKey].protein += nutrition.protein
+              dailyData[dateKey].carbs += nutrition.carbs
+              dailyData[dateKey].fat += nutrition.fat
+            }
+          })
+
+          // Convert to array and sort by date
+          const nutritionArray = Object.values(dailyData)
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          
+          setDailyNutrition(nutritionArray)
+          console.log('Daily nutrition calculated:', nutritionArray)
+        }
+
+        setIsLoading(false)
+      } catch (err) {
+        console.error('Unexpected error:', err)
+        setError('An unexpected error occurred')
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-
-  const calorieData = [
-    { day: "Mon", calories: 1850 },
-    { day: "Tue", calories: 2100 },
-    { day: "Wed", calories: 1920 },
-    { day: "Thu", calories: 2050 },
-    { day: "Fri", calories: 1780 },
-    { day: "Sat", calories: 2200 },
-    { day: "Sun", calories: 1950 },
-  ]
-
-  const macroData = [
-    { day: "Mon", protein: 95, carbs: 180, fat: 60 },
-    { day: "Tue", protein: 110, carbs: 210, fat: 70 },
-    { day: "Wed", protein: 100, carbs: 190, fat: 65 },
-    { day: "Thu", protein: 115, carbs: 200, fat: 68 },
-    { day: "Fri", protein: 90, carbs: 170, fat: 55 },
-    { day: "Sat", protein: 120, carbs: 220, fat: 75 },
-    { day: "Sun", protein: 105, carbs: 195, fat: 62 },
-  ]
-
-  const recipes = [
-    {
-      id: 1,
-      title: "Mediterranean Quinoa Bowl",
-      image: "/placeholder.svg?height=200&width=300",
-      calories: 450,
-      protein: 22,
-      carbs: 65,
-      fat: 12,
-      prepTime: 25,
-      tags: ["Vegetarian", "High Protein"],
-    },
-    {
-      id: 2,
-      title: "Grilled Chicken with Avocado Salsa",
-      image: "/placeholder.svg?height=200&width=300",
-      calories: 520,
-      protein: 42,
-      carbs: 15,
-      fat: 28,
-      prepTime: 35,
-      tags: ["Keto", "High Protein"],
-    },
-    {
-      id: 3,
-      title: "Spicy Tofu Stir Fry",
-      image: "/placeholder.svg?height=200&width=300",
-      calories: 380,
-      protein: 18,
-      carbs: 45,
-      fat: 14,
-      prepTime: 20,
-      tags: ["Vegan", "Low Calorie"],
-    },
-    {
-      id: 4,
-      title: "Salmon with Roasted Vegetables",
-      image: "/placeholder.svg?height=200&width=300",
-      calories: 490,
-      protein: 35,
-      carbs: 25,
-      fat: 26,
-      prepTime: 40,
-      tags: ["Paleo", "Omega-3"],
-    },
-  ]
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   // Calculate today's nutrition totals
-  const today = calorieData[6]
-  const todayMacros = macroData[6]
-  const caloriePercentage = Math.round((today.calories / user.dailyCalorieGoal) * 100)
-  const proteinPercentage = Math.round((todayMacros.protein / user.dailyProteinGoal) * 100)
-  const carbsPercentage = Math.round((todayMacros.carbs / user.dailyCarbsGoal) * 100)
-  const fatPercentage = Math.round((todayMacros.fat / user.dailyFatGoal) * 100)
+  const today = new Date().toISOString().split('T')[0]
+  const todayNutrition = dailyNutrition.find(d => d.date === today) || {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0
+  }
+
+  const caloriePercentage = userProfile?.calorie_intake 
+    ? Math.round((todayNutrition.calories / userProfile.calorie_intake) * 100)
+    : 0
+
+  const proteinPercentage = userProfile?.macronutrient_preferences?.protein
+    ? Math.round((todayNutrition.protein / userProfile.macronutrient_preferences.protein) * 100)
+    : 0
+
+  const carbsPercentage = userProfile?.macronutrient_preferences?.carbs
+    ? Math.round((todayNutrition.carbs / userProfile.macronutrient_preferences.carbs) * 100)
+    : 0
+
+  const fatPercentage = userProfile?.macronutrient_preferences?.fat
+    ? Math.round((todayNutrition.fat / userProfile.macronutrient_preferences.fat) * 100)
+    : 0
+
+  // Add this function to format the data for charts
+  const formatChartData = (data: DailyNutrition[]): ChartPoint[] => {
+    return data.map(item => ({
+      date: item.date,
+      calories: item.calories || 0,
+      protein: item.protein || 0,
+      carbs: item.carbs || 0,
+      fat: item.fat || 0
+    }))
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-orange-50">
-
       <main className="flex-1 py-8">
         <div className="container mx-auto max-w-7xl px-4">
           {/* Welcome Section */}
           <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold mb-2">Welcome back, {user.name.split(" ")[0]}!</h1>
+            <h1 className="text-2xl font-bold mb-2">Welcome back, {userProfile?.name?.split(" ")[0]}!</h1>
             <p className="text-gray-600">Here's an overview of your nutrition and recipes.</p>
           </div>
 
-          {/* Dashboard Tabs */}
-          <Tabs defaultValue="overview" className="mb-8">
-            <TabsList className="bg-white border border-orange-100">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
-              <TabsTrigger value="recipes">Recipes</TabsTrigger>
-              <TabsTrigger value="meal-plan">Meal Plan</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="mt-6">
-              {/* Today's Summary */}
-              <div className="grid gap-6 md:grid-cols-4 mb-8">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">Calories Today</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold">{today.calories}</div>
-                      <Fire className="h-5 w-5 text-orange-500" />
-                    </div>
-                    <Progress value={caloriePercentage} className="h-2 mt-2" indicatorClassName="bg-orange-500" />
-                    <p className="text-xs text-gray-500 mt-1">
-                      {caloriePercentage}% of daily goal ({user.dailyCalorieGoal})
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">Protein</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold">{todayMacros.protein}g</div>
-                      <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">
-                        P
-                      </div>
-                    </div>
-                    <Progress value={proteinPercentage} className="h-2 mt-2" indicatorClassName="bg-blue-500" />
-                    <p className="text-xs text-gray-500 mt-1">
-                      {proteinPercentage}% of daily goal ({user.dailyProteinGoal}g)
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">Carbs</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold">{todayMacros.carbs}g</div>
-                      <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-600">
-                        C
-                      </div>
-                    </div>
-                    <Progress value={carbsPercentage} className="h-2 mt-2" indicatorClassName="bg-green-500" />
-                    <p className="text-xs text-gray-500 mt-1">
-                      {carbsPercentage}% of daily goal ({user.dailyCarbsGoal}g)
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">Fat</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold">{todayMacros.fat}g</div>
-                      <div className="h-5 w-5 rounded-full bg-yellow-100 flex items-center justify-center text-xs font-bold text-yellow-600">
-                        F
-                      </div>
-                    </div>
-                    <Progress value={fatPercentage} className="h-2 mt-2" indicatorClassName="bg-yellow-500" />
-                    <p className="text-xs text-gray-500 mt-1">
-                      {fatPercentage}% of daily goal ({user.dailyFatGoal}g)
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Weekly Charts */}
-              <div className="grid gap-6 md:grid-cols-2 mb-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Calorie Intake (Past Week)</CardTitle>
-                    <CardDescription>Daily calorie consumption</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px]">
-                      <ChartContainer data={calorieData} xAxisKey="day" yAxisKey="calories">
-                        <ChartGrid />
-                        <ChartYAxis />
-                        <ChartXAxis />
-                        <ChartLineLayer dataKey="calories" curve="linear" className="stroke-orange-500 stroke-2" />
-                        <ChartLine
-                          className="stroke-orange-500/20 stroke-dasharray-2"
-                          strokeWidth={2}
-                          y={user.dailyCalorieGoal}
-                        />
-                        <ChartTooltip>
-                          {({ point }) => (
-                            <ChartTooltipContent>
-                              <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2">
-                                  <div className="h-2 w-2 rounded-full bg-orange-500" />
-                                  <span className="font-medium">{point.day}</span>
-                                </div>
-                                <div className="text-sm text-gray-500">{point.calories} calories</div>
-                              </div>
-                            </ChartTooltipContent>
-                          )}
-                        </ChartTooltip>
-                      </ChartContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Macronutrient Breakdown</CardTitle>
-                    <CardDescription>Protein, carbs, and fat distribution</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px]">
-                      <ChartContainer data={macroData} xAxisKey="day" yAxisKey="protein">
-                        <ChartGrid />
-                        <ChartYAxis />
-                        <ChartXAxis />
-                        <ChartBarLayer dataKey="protein" className="fill-blue-500" />
-                        <ChartBarLayer dataKey="carbs" className="fill-green-500" />
-                        <ChartBarLayer dataKey="fat" className="fill-yellow-500" />
-                        <ChartTooltip>
-                          {({ point }) => (
-                            <ChartTooltipContent>
-                              <div className="flex flex-col gap-1">
-                                <div className="font-medium">{point.day}</div>
-                                <div className="flex items-center gap-2">
-                                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                                  <span className="text-sm text-gray-500">Protein: {point.protein}g</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                                  <span className="text-sm text-gray-500">Carbs: {point.carbs}g</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                                  <span className="text-sm text-gray-500">Fat: {point.fat}g</span>
-                                </div>
-                              </div>
-                            </ChartTooltipContent>
-                          )}
-                        </ChartTooltip>
-                      </ChartContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="nutrition">
-              <div className="text-center py-12">
-                <p className="text-gray-500">Detailed nutrition analytics will appear here.</p>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="recipes">
-              <div className="text-center py-12">
-                <p className="text-gray-500">All your saved recipes will appear here.</p>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="meal-plan">
-              <div className="text-center py-12">
-                <p className="text-gray-500">Your weekly meal plan will appear here.</p>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          {/* Your Recipes */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Your AI-Generated Recipes</h2>
-              <Button variant="outline" size="sm" className="text-gray-500">
-                View All <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
+        
+          <div className="max-w-4xl mx-auto">
+            <Tabs defaultValue="overview" className="mb-8">
+            <div defaultValue="overview" className=" flex justify-center">
+              <TabsList className="bg-white border border-orange-100 flex justify-center">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
+                <TabsTrigger value="recipes">Recipes</TabsTrigger>
+              </TabsList>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {recipes.map((recipe) => (
-                <Card key={recipe.id} className="overflow-hidden">
-                  <div className="relative h-40 w-full">
-                    <Image src={recipe.image || "/placeholder.svg"} alt={recipe.title} fill className="object-cover" />
-                  </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{recipe.title}</CardTitle>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {recipe.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+              <TabsContent value="overview" className="mt-6">
+                {/* Today's Summary */}
+                <div className="grid gap-6 md:grid-cols-4 mb-8">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-500">Calories Today</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <div className="text-2xl font-bold">{todayNutrition.calories}</div>
+                        <div className="h-5 w-5 rounded-full bg-orange-100 flex items-center justify-center">
+                          <span className="text-xs font-bold text-orange-600">C</span>
+                        </div>
+                      </div>
+                      <Progress value={caloriePercentage} className="h-2 mt-2" />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {caloriePercentage}% of daily goal ({userProfile?.calorie_intake || 0})
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-500">Protein</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <div className="text-2xl font-bold">{todayNutrition.protein}g</div>
+                        <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-xs font-bold text-blue-600">P</span>
+                        </div>
+                      </div>
+                      <Progress value={proteinPercentage} className="h-2 mt-2" />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {proteinPercentage}% of daily goal ({userProfile?.macronutrient_preferences?.protein || 0}g)
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-500">Carbs</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <div className="text-2xl font-bold">{todayNutrition.carbs}g</div>
+                        <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center">
+                          <span className="text-xs font-bold text-green-600">C</span>
+                        </div>
+                      </div>
+                      <Progress value={carbsPercentage} className="h-2 mt-2" />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {carbsPercentage}% of daily goal ({userProfile?.macronutrient_preferences?.carbs || 0}g)
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-500">Fat</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <div className="text-2xl font-bold">{todayNutrition.fat}g</div>
+                        <div className="h-5 w-5 rounded-full bg-yellow-100 flex items-center justify-center">
+                          <span className="text-xs font-bold text-yellow-600">F</span>
+                        </div>
+                      </div>
+                      <Progress value={fatPercentage} className="h-2 mt-2" />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {fatPercentage}% of daily goal ({userProfile?.macronutrient_preferences?.fat || 0}g)
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Weekly Charts */}
+                {/* <div className="grid gap-6 md:grid-cols-2 mb-8">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Calorie Intake (Past Week)</CardTitle>
+                      <CardDescription>Daily calorie consumption</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        {dailyNutrition && dailyNutrition.length > 0 ? (
+                          <ChartContainer 
+                            data={formatChartData(dailyNutrition)} 
+                            xAxisKey="date" 
+                            yAxisKey="calories"
+                          >
+                            <ChartGrid />
+                            <ChartYAxis />
+                            <ChartXAxis />
+                            <ChartLineLayer 
+                              dataKey="calories" 
+                              curve="linear" 
+                              className="stroke-orange-500 stroke-2" 
+                            />
+                            <ChartLine
+                              className="stroke-orange-500/20 stroke-dasharray-2"
+                              strokeWidth={2}
+                              y={userProfile?.calorie_intake || 0}
+                            />
+                            <ChartTooltip>
+                              {({ point }: { point: ChartPoint }) => (
+                                <ChartTooltipContent>
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-2 w-2 rounded-full bg-orange-500" />
+                                      <span className="font-medium">{point.date}</span>
+                                    </div>
+                                    <div className="text-sm text-gray-500">{point.calories} calories</div>
+                                  </div>
+                                </ChartTooltipContent>
+                              )}
+                            </ChartTooltip>
+                          </ChartContainer>
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <p className="text-gray-500">No data available for the past week</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Macronutrient Breakdown</CardTitle>
+                      <CardDescription>Protein, carbs, and fat distribution</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        {dailyNutrition && dailyNutrition.length > 0 ? (
+                          <ChartContainer 
+                            data={formatChartData(dailyNutrition)} 
+                            xAxisKey="date" 
+                            yAxisKey="protein"
+                          >
+                            <ChartGrid />
+                            <ChartYAxis />
+                            <ChartXAxis />
+                            <ChartBarLayer dataKey="protein" className="fill-blue-500" />
+                            <ChartBarLayer dataKey="carbs" className="fill-green-500" />
+                            <ChartBarLayer dataKey="fat" className="fill-yellow-500" />
+                            <ChartTooltip>
+                              {({ point }: { point: ChartPoint }) => (
+                                <ChartTooltipContent>
+                                  <div className="flex flex-col gap-1">
+                                    <div className="font-medium">{point.date}</div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-2 w-2 rounded-full bg-blue-500" />
+                                      <span className="text-sm text-gray-500">Protein: {point.protein}g</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-2 w-2 rounded-full bg-green-500" />
+                                      <span className="text-sm text-gray-500">Carbs: {point.carbs}g</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-2 w-2 rounded-full bg-yellow-500" />
+                                      <span className="text-sm text-gray-500">Fat: {point.fat}g</span>
+                                    </div>
+                                  </div>
+                                </ChartTooltipContent>
+                              )}
+                            </ChartTooltip>
+                          </ChartContainer>
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <p className="text-gray-500">No data available for the past week</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div> */}
+              </TabsContent>
+
+              <TabsContent value="nutrition" className="mt-6">
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Detailed nutrition analytics will appear here.</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="recipes" className="mt-6">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {savedRecipes.length > 0 ? (
+                    savedRecipes.map((recipe) => (
+                      <Card key={recipe.id} className="flex flex-col">
+                        <CardHeader>
+                          <CardTitle>{recipe.recipe_data.name}</CardTitle>
+                          <CardDescription>
+                            <div className="flex gap-2 text-sm text-muted-foreground">
+                              <span>Prep: {recipe.recipe_data.prep_time}</span>
+                              <span>•</span>
+                              <span>Cook: {recipe.recipe_data.cook_time}</span>
+                              <span>•</span>
+                              <span>Difficulty: {recipe.recipe_data.difficulty}</span>
+                            </div>
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-1">
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>Calories: {recipe.recipe_data.nutrition.calories}</div>
+                            <div>Protein: {recipe.recipe_data.nutrition.protein}g</div>
+                            <div>Carbs: {recipe.recipe_data.nutrition.carbs}g</div>
+                            <div>Fat: {recipe.recipe_data.nutrition.fat}g</div>
+                          </div>
+                        </CardContent>
+                        <CardFooter>
+                          <Button variant="outline" size="sm" className="w-full" asChild>
+                            <Link href={`/recipes/${recipe.id}`}>
+                              View Recipe <ChevronRight className="ml-1 h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-gray-500">No saved recipes yet</p>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div className="flex flex-col items-center">
-                        <span className="text-gray-500 text-xs">Calories</span>
-                        <span className="font-medium">{recipe.calories}</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className="text-gray-500 text-xs">Protein</span>
-                        <span className="font-medium">{recipe.protein}g</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className="text-gray-500 text-xs">Time</span>
-                        <span className="font-medium">{recipe.prepTime}m</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" size="sm" className="w-full">
-                      View Recipe
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Generate New Recipe Button */}
-          <div className="flex justify-center">
-            <Link href={"/chat"}>
-            <Button
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg gap-2"
-              >
-              <Plus className="h-5 w-5" />
-              Generate New Recipe
-            </Button>
-              </Link>
+          <div className="flex justify-center mt-8">
+            <Link href="/chat">
+              <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg gap-2">
+                <Plus className="h-5 w-5" />
+                Generate New Recipe
+              </Button>
+            </Link>
           </div>
         </div>
       </main>

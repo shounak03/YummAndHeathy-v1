@@ -63,11 +63,11 @@ export function RecipeDisplay({ recipes }: RecipeDisplayProps) {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-8 mt-4">
       {recipes.recipes.map((recipe, index) => (
-        <Card key={index} className="flex flex-col">
+        <Card key={index} className="w-full">
           <CardHeader>
-            <CardTitle>{recipe.name}</CardTitle>
+            <CardTitle className="text-2xl">{recipe.name}</CardTitle>
             <CardDescription>
               <div className="flex gap-2 text-sm text-muted-foreground">
                 <span>Prep: {recipe.prep_time}</span>
@@ -80,68 +80,94 @@ export function RecipeDisplay({ recipes }: RecipeDisplayProps) {
               </div>
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-1">
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">Ingredients</h3>
-                <ul className="list-disc list-inside space-y-1">
-                  {recipe.ingredients.map((ingredient, i) => (
-                    <li key={i}>{ingredient}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Instructions</h3>
-                <ol className="list-decimal list-inside space-y-1">
-                  {recipe.instructions.map((instruction, i) => (
-                    <li key={i}>{instruction}</li>
-                  ))}
-                </ol>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Nutritional Information</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>Calories: {recipe.nutrition.calories}</div>
-                  <div>Protein: {recipe.nutrition.protein}g</div>
-                  <div>Carbs: {recipe.nutrition.carbs}g</div>
-                  <div>Fat: {recipe.nutrition.fat}g</div>
-                  <div>Fiber: {recipe.nutrition.fiber}g</div>
-                  <div>Sugar: {recipe.nutrition.sugar}g</div>
-                  <div>Sodium: {recipe.nutrition.sodium}mg</div>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Ingredients</h3>
+              <ul className="list-disc list-inside space-y-1">
+                {recipe.ingredients.map((ingredient, i) => (
+                  <li key={i} className="text-gray-700">{ingredient}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Instructions</h3>
+              <ol className="list-decimal list-inside space-y-2">
+                {recipe.instructions.map((instruction, i) => (
+                  <li key={i} className="text-gray-700">{instruction}</li>
+                ))}
+              </ol>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Nutrition Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Calories</p>
+                  <p className="font-medium">{recipe.nutrition.calories}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Protein</p>
+                  <p className="font-medium">{recipe.nutrition.protein}g</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Carbs</p>
+                  <p className="font-medium">{recipe.nutrition.carbs}g</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Fat</p>
+                  <p className="font-medium">{recipe.nutrition.fat}g</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Fiber</p>
+                  <p className="font-medium">{recipe.nutrition.fiber}g</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Sugar</p>
+                  <p className="font-medium">{recipe.nutrition.sugar}g</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Sodium</p>
+                  <p className="font-medium">{recipe.nutrition.sodium}mg</p>
                 </div>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Cost per Serving</p>
+                <p className="font-medium">{recipe.cost_per_serving}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Sustainability Score</p>
+                <p className="font-medium">{recipe.sustainability_score}/10</p>
+              </div>
+            </div>
+            {recipe.meal_prep_tips && (
               <div>
-                <h3 className="font-semibold mb-2">Meal Prep Tips</h3>
+                <h3 className="text-lg font-semibold mb-2">Meal Prep Tips</h3>
                 <ul className="list-disc list-inside space-y-1">
                   {recipe.meal_prep_tips.map((tip, i) => (
-                    <li key={i}>{tip}</li>
+                    <li key={i} className="text-gray-700">{tip}</li>
                   ))}
                 </ul>
               </div>
-              {recipe.substitutions.length > 0 && (
-                <div>
-                  <h3 className="font-semibold mb-2">Substitutions</h3>
-                  <ul className="list-disc list-inside space-y-1">
-                    {recipe.substitutions.map((sub, i) => (
-                      <li key={i}>{sub}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            )}
+            {recipe.substitutions.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Substitutions</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  {recipe.substitutions.map((sub, i) => (
+                    <li key={i} className="text-gray-700">{sub}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </CardContent>
-          <CardFooter className="flex justify-between items-center">
-            <div className="text-sm text-muted-foreground">
-              Cost per serving: {recipe.cost_per_serving}
-              <br />
-              Sustainability score: {recipe.sustainability_score}/10
-            </div>
-            <Button
-              variant={savedRecipes.has(recipe.name) ? "secondary" : "default"}
+          <CardFooter>
+            <Button 
+              className="w-full" 
               onClick={() => handleSaveRecipe(recipe)}
               disabled={savedRecipes.has(recipe.name)}
             >
-              {savedRecipes.has(recipe.name) ? "Saved" : "Save Recipe"}
+              {savedRecipes.has(recipe.name) ? 'Recipe Saved' : 'Save Recipe'}
             </Button>
           </CardFooter>
         </Card>
