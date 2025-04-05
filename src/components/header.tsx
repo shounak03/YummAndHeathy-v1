@@ -1,7 +1,7 @@
 
 "use server"
 
-import { Utensils, User, User2, LogOut } from 'lucide-react'
+import { Utensils, User, User2, LogOut, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from './ui/button'
@@ -21,7 +21,7 @@ import {
 export default async function Header() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  console.log("avatar -", user?.user_metadata.avatar_url);
+  console.log("avatar -", user);
 
 
   return (
@@ -63,13 +63,13 @@ export default async function Header() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user?.user_metadata?.name}</p>
+                    <p className="text-sm font-medium leading-none">{user?.user_metadata?.name || "User"}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
@@ -80,9 +80,7 @@ export default async function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {/* <DropdownMenuItem>
-                <LogoutButton />
-              </DropdownMenuItem> */}
+            
                 <DropdownMenuItem asChild>
                   <Link href="/api/auth/logout" className="flex w-full items-center text-red-600 focus:text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />

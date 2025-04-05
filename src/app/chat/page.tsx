@@ -5,9 +5,10 @@ import { RecipeDisplay } from '@/components/RecipeDisplay'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { ChefHat } from 'lucide-react'
 
 export default function ChatPage() {
-  const [message, setMessage] = useState('')
+  const [ingredient, setIngredient] = useState('')
   const [recipes, setRecipes] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -21,7 +22,7 @@ export default function ChatPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ ingredient }),
       })
 
       if (!response.ok) {
@@ -41,19 +42,40 @@ export default function ChatPage() {
   return (
     <div className="container mx-auto py-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Recipe Generator</h1>
-        
+        <h1 className="text-3xl font-bold text-center uppercase mb-2">Welcome chief<br /></h1>
+        <div className='flex justify-center'>
+          <h3 className='text-xl text-center font-semibold mr-1'>I will be your </h3>
+          <ChefHat />
+          <h3 className='text-xl text-center font-semibold mb-2'> Chef for today</h3>
+        </div>
+        <h3 className='text-xl text-center mb-8'>Let me make you some healthy and delicious meal.</h3>
+
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex gap-4">
             <Input
               type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Ask for personalized recipes..."
+              value={ingredient}
+              onChange={(e) => setIngredient(e.target.value)}
+              placeholder="Add some ingredients of your choice.."
               className="flex-1"
             />
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Generating...' : 'Generate'}
+
+          </div>
+          <div className="flex justify-center">
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className='cursor-pointer bg-amber-600 hover:bg-amber-700'
+            >
+              {isLoading ? (
+                'Hold up! Let me cook'
+              ) : recipes ? (
+                `Don't like it? Cook again`
+              ) : (
+                'Cook'
+              )}
             </Button>
           </div>
         </form>

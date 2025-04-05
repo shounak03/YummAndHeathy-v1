@@ -29,6 +29,7 @@ interface Recipe {
 
 interface RecipeDisplayProps {
   recipes: {
+    message:string
     recipes: Recipe[]
   }
 }
@@ -64,6 +65,7 @@ export function RecipeDisplay({ recipes }: RecipeDisplayProps) {
 
   return (
     <div className="space-y-8 mt-4">
+      <h2 className='text-xl font-semibold'>{recipes.message}</h2>
       {recipes.recipes.map((recipe, index) => (
         <Card key={index} className="w-full">
           <CardHeader>
