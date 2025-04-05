@@ -15,13 +15,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Avatar } from './Avatar'
 
 
 
 export default async function Header() {
   const supabase = await createClient()
+
+
   const { data: { user } } = await supabase.auth.getUser()
-  console.log("avatar -", user);
+  // console.log("User metadata:", JSON.stringify(user?.user_metadata.avatar_url));
 
 
   return (
@@ -43,21 +46,8 @@ export default async function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <div className="relative h-8 w-8 rounded-full overflow-hidden bg-orange-100">
-                    {user?.user_metadata?.avatar_url ? (
-                      <Image
-                        src={user?.user_metadata?.avatar_url}
-                        alt={user.email || "User avatar"}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-orange-200">
-                        <User className="h-4 w-4 text-orange-500 bg-gray-950" />
-                      </div>
-                    )}
-                  </div>
+
+                    <User2 size={40}/>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -80,7 +70,7 @@ export default async function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-            
+
                 <DropdownMenuItem asChild>
                   <Link href="/api/auth/logout" className="flex w-full items-center text-red-600 focus:text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
