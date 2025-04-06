@@ -1,7 +1,7 @@
 
 "use server"
 
-import { User2, LogOut, LayoutDashboard, Flag } from 'lucide-react'
+import { User2, LogOut, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
@@ -23,7 +23,6 @@ export default async function Header() {
 
   const headerList = await headers();
   const pathname = headerList.get("x-current-path");
-  console.log(pathname);
 
   return (
     <header className="relative z-50 code-section" id="sd5zl4">
@@ -37,6 +36,7 @@ export default async function Header() {
             width={35}
             height={35}
             className='mr-2'
+            unoptimized = {true}
           />
             <Link href="/" className="text-3xl text-[var(--primary-color)] [font-family:var(--font-family-heading)]">
               <span>Yumm</span>

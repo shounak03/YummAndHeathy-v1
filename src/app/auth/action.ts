@@ -72,18 +72,25 @@ export async function fetchUser() {
     return user
 }
 
-export const providerSignIn = async() =>{
+export const providerSignIn = async() => {
   const supabase = await createClient();
-  const callbackUrl = `http://localhost:3000/api/auth/callback`
+  
+  // Determine the callback URL based on the environment
+  const isProduction = process.env.NODE_ENV === 'production';
+  const callbackUrl = isProduction 
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`
+    : 'http://localhost:3000/api/auth/callback';
  
-  const {data,error}= await supabase.auth.signInWithOAuth({
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options:{
-      redirectTo : callbackUrl
+    options: {
+      redirectTo: callbackUrl
     }
-  })
-  if(error){
-    throw new AuthError(error.message)
+  });
+  
+  if (error) {
+    throw new AuthError(error.message);
   }
-  redirect(data.url ?? "")
+  
+  redirect(data.url ?? "");
 }
