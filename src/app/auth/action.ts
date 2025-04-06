@@ -78,8 +78,8 @@ export const providerSignIn = async() => {
   // Determine the callback URL based on the environment
   const isProduction = process.env.NODE_ENV === 'production';
   const callbackUrl = isProduction 
-    ? `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`
-    : 'http://localhost:3000/api/auth/callback';
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+    : 'http://localhost:3000/auth/callback';
  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',

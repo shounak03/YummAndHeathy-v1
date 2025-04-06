@@ -20,7 +20,7 @@ import { headers } from 'next/headers'
 export default async function Header() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
+  
   const headerList = await headers();
   const pathname = headerList.get("x-current-path");
 
@@ -30,13 +30,12 @@ export default async function Header() {
         <div className="flex items-center justify-between relative">
           
           <div className="pl-6 text-xl font-bold flex justify-start">
-          <Image
+          <img
             src={"/diet.png"}
             alt='logo'
             width={35}
             height={35}
             className='mr-2'
-            unoptimized = {true}
           />
             <Link href="/" className="text-3xl text-[var(--primary-color)] [font-family:var(--font-family-heading)]">
               <span>Yumm</span>

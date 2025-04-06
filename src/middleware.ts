@@ -98,7 +98,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/profile', req.url))
   }
 
-  if (user && (req.nextUrl.pathname === '/dashboard' ||  req.nextUrl.pathname === '/profile' )) {
+  if (user && (req.nextUrl.pathname === '/dashboard' ||  req.nextUrl.pathname === '/profile' || req.nextUrl.pathname === '/chat' )) {
     const { data: profile } = await supabase
     .from('profiles')
     .select('id')
