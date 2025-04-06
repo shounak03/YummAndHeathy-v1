@@ -1,311 +1,3 @@
-// "use client";
-// import { useEffect, useState } from 'react'
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-// import { Button } from '@/components/ui/button'
-// import { Input } from '@/components/ui/input'
-// import { Label } from '@/components/ui/label'
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-// import { toast } from 'sonner'
-// import { fetchUser } from '../auth/action'
-// import { supabase } from '@/lib/supabase/client'
-// import { useRouter } from 'next/navigation'
-
-// interface Profile {
-//   id: string
-//   name: string
-//   email: string
-//   dietary_restrictions: string[]
-//   calorie_intake: number
-//   macronutrient_preferences: {
-//     protein: number
-//     carbs: number
-//     fat: number
-//   }
-//   cooking_skill_level: string
-//   kitchen_equipment: string[]
-//   budget_preference: string
-//   sustainability_preference: string
-//   time_availability: string
-// }
-
-// type SelectValueType = 'beginner' | 'intermediate' | 'advanced' | 'budget' | 'moderate' | 'premium' | 'low' | 'medium' | 'high' | 'quick' | 'moderate' | 'extended'
-
-// export default function CreateProfilePage() {
-//   const router = useRouter()
-//   const [profile, setProfile] = useState<Profile>({
-//     id: '',
-//     name: '',
-//     email: '',
-//     dietary_restrictions: [],
-//     calorie_intake: 2000,
-//     macronutrient_preferences: {
-//       protein: 30,
-//       carbs: 40,
-//       fat: 30
-//     },
-//     cooking_skill_level: 'beginner',
-//     kitchen_equipment: [],
-//     budget_preference: 'moderate',
-//     sustainability_preference: 'medium',
-//     time_availability: 'moderate'
-//   })
-//   const [isLoading, setIsLoading] = useState(true)
-//   const [error, setError] = useState<string | null>(null)
-
-//   useEffect(() => {
-//     const checkExistingProfile = async () => {
-//       try {
-//         const userResponse = await fetchUser()
-//         if (!userResponse?.data?.user) {
-//           setError('Authentication required')
-//           setIsLoading(false)
-//           return
-//         }
-
-//         const { data, error } = await supabase
-//           .from('profiles')
-//           .select('*')
-//           .eq('id', userResponse.data.user.id)
-//           .single()
-
-//         if (data) {
-//           // If profile exists, redirect to profile page
-//           router.push('/profile')
-//           return
-//         }
-
-//         // Set user ID and email for new profile
-//         setProfile(prev => ({
-//           ...prev,
-//           id: userResponse.data.user.id,
-//           email: userResponse.data.user.email || ''
-//         }))
-//       } catch (err) {
-//         console.error('Error checking profile:', err)
-//         setError('Failed to check profile')
-//       } finally {
-//         setIsLoading(false)
-//       }
-//     }
-
-//     checkExistingProfile()
-//   }, [router])
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault()
-//     setIsLoading(true)
-
-//     try {
-//       const { error } = await supabase
-//         .from('profiles')
-//         .insert([profile])
-
-//       if (error) throw error
-
-//       toast.success('Profile created successfully')
-//       router.push('/profile')
-//     } catch (err) {
-//       console.error('Error creating profile:', err)
-//       toast.error('Failed to create profile')
-//     } finally {
-//       setIsLoading(false)
-//     }
-//   }
-
-//   if (isLoading) {
-//     return (
-//       <div className="flex items-center justify-center min-h-screen">
-//         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-//       </div>
-//     )
-//   }
-
-//   if (error) {
-//     return (
-//       <div className="flex items-center justify-center min-h-screen">
-//         <div className="text-center">
-//           <p className="text-red-500 mb-4">{error}</p>
-//           <Button variant="outline" onClick={() => window.location.reload()}>
-//             Try Again
-//           </Button>
-//         </div>
-//       </div>
-//     )
-//   }
-
-//   return (
-//     <div className="container mx-auto max-w-4xl py-8">
-//       <Card>
-//         <CardHeader>
-//           <CardTitle className="text-2xl">Create Your Profile</CardTitle>
-//           <CardDescription>Set up your nutrition preferences and profile information</CardDescription>
-//         </CardHeader>
-//         <CardContent>
-//           <form onSubmit={handleSubmit} className="space-y-6">
-//             <div className="grid gap-4">
-//               <div className="space-y-2">
-//                 <Label htmlFor="name">Name</Label>
-//                 <Input
-//                   id="name"
-//                   value={profile.name}
-//                   onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-//                   required
-//                 />
-//               </div>
-
-//               <div className="space-y-2">
-//                 <Label htmlFor="email">Email</Label>
-//                 <Input
-//                   id="email"
-//                   value={profile.email}
-//                   disabled
-//                   className="bg-gray-100"
-//                 />
-//               </div>
-
-//               <div className="space-y-2">
-//                 <Label htmlFor="calorie_intake">Daily Calorie Intake</Label>
-//                 <Input
-//                   id="calorie_intake"
-//                   type="number"
-//                   value={profile.calorie_intake}
-//                   onChange={(e) => setProfile({ ...profile, calorie_intake: Number(e.target.value) })}
-//                   required
-//                 />
-//               </div>
-
-//               <div className="space-y-2">
-//                 <Label>Macronutrient Preferences (%)</Label>
-//                 <div className="grid grid-cols-3 gap-4">
-//                   <div>
-//                     <Label htmlFor="protein">Protein</Label>
-//                     <Input
-//                       id="protein"
-//                       type="number"
-//                       value={profile.macronutrient_preferences.protein}
-//                       onChange={(e) => setProfile({
-//                         ...profile,
-//                         macronutrient_preferences: {
-//                           ...profile.macronutrient_preferences,
-//                           protein: Number(e.target.value)
-//                         }
-//                       })}
-//                       required
-//                     />
-//                   </div>
-//                   <div>
-//                     <Label htmlFor="carbs">Carbs</Label>
-//                     <Input
-//                       id="carbs"
-//                       type="number"
-//                       value={profile.macronutrient_preferences.carbs}
-//                       onChange={(e) => setProfile({
-//                         ...profile,
-//                         macronutrient_preferences: {
-//                           ...profile.macronutrient_preferences,
-//                           carbs: Number(e.target.value)
-//                         }
-//                       })}
-//                       required
-//                     />
-//                   </div>
-//                   <div>
-//                     <Label htmlFor="fat">Fat</Label>
-//                     <Input
-//                       id="fat"
-//                       type="number"
-//                       value={profile.macronutrient_preferences.fat}
-//                       onChange={(e) => setProfile({
-//                         ...profile,
-//                         macronutrient_preferences: {
-//                           ...profile.macronutrient_preferences,
-//                           fat: Number(e.target.value)
-//                         }
-//                       })}
-//                       required
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <div className="space-y-2">
-//                 <Label htmlFor="cooking_skill_level">Cooking Skill Level</Label>
-//                 <Select
-//                   value={profile.cooking_skill_level}
-//                   onValueChange={(value: SelectValueType) => setProfile({ ...profile, cooking_skill_level: value })}
-//                 >
-//                   <SelectTrigger>
-//                     <SelectValue placeholder="Select skill level" />
-//                   </SelectTrigger>
-//                   <SelectContent>
-//                     <SelectItem value="beginner">Beginner</SelectItem>
-//                     <SelectItem value="intermediate">Intermediate</SelectItem>
-//                     <SelectItem value="advanced">Advanced</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//               </div>
-
-//               <div className="space-y-2">
-//                 <Label htmlFor="budget_preference">Budget Preference</Label>
-//                 <Select
-//                   value={profile.budget_preference}
-//                   onValueChange={(value: SelectValueType) => setProfile({ ...profile, budget_preference: value })}
-//                 >
-//                   <SelectTrigger>
-//                     <SelectValue placeholder="Select budget preference" />
-//                   </SelectTrigger>
-//                   <SelectContent>
-//                     <SelectItem value="budget">Budget-friendly</SelectItem>
-//                     <SelectItem value="moderate">Moderate</SelectItem>
-//                     <SelectItem value="premium">Premium</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//               </div>
-
-//               <div className="space-y-2">
-//                 <Label htmlFor="sustainability_preference">Sustainability Preference</Label>
-//                 <Select
-//                   value={profile.sustainability_preference}
-//                   onValueChange={(value: SelectValueType) => setProfile({ ...profile, sustainability_preference: value })}
-//                 >
-//                   <SelectTrigger>
-//                     <SelectValue placeholder="Select sustainability preference" />
-//                   </SelectTrigger>
-//                   <SelectContent>
-//                     <SelectItem value="low">Low</SelectItem>
-//                     <SelectItem value="medium">Medium</SelectItem>
-//                     <SelectItem value="high">High</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//               </div>
-
-//               <div className="space-y-2">
-//                 <Label htmlFor="time_availability">Time Availability</Label>
-//                 <Select
-//                   value={profile.time_availability}
-//                   onValueChange={(value: SelectValueType) => setProfile({ ...profile, time_availability: value })}
-//                 >
-//                   <SelectTrigger>
-//                     <SelectValue placeholder="Select time availability" />
-//                   </SelectTrigger>
-//                   <SelectContent>
-//                     <SelectItem value="quick">Quick (15-30 mins)</SelectItem>
-//                     <SelectItem value="moderate">Moderate (30-60 mins)</SelectItem>
-//                     <SelectItem value="extended">Extended (60+ mins)</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//               </div>
-
-//               <Button type="submit" disabled={isLoading}>
-//                 {isLoading ? 'Creating Profile...' : 'Create Profile'}
-//               </Button>
-//             </div>
-//           </form>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   )
-// } 
 
 "use client";
 import { useState } from 'react'
@@ -503,7 +195,7 @@ export default function ProfilePage() {
       case 1:
         return (
           <section className="border-b border-orange-100 pb-6">
-            <h2 className="text-xl font-semibold text-orange-700 mb-4">Basic Information</h2>
+            <h2 className="font-bold text-gray-900 uppercase text-xl mb-4 [font-family:var(--font-family-heading)]">Basic Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -554,7 +246,7 @@ export default function ProfilePage() {
                     />
                   }
 
-                  <Button type='button' className='bg-orange-500 text-white rounded-md cursor-pointer' size="sm" onClick={findlocation}
+                  <Button type='button' className='bg-green-800 text-white rounded-md cursor-pointer' size="sm" onClick={findlocation}
                   >
                     Find Location
                   </Button>
@@ -587,7 +279,7 @@ export default function ProfilePage() {
       case 2:
         return (
           <section className="border-b border-orange-100 pb-6">
-            <h2 className="text-xl font-semibold text-orange-700 mb-4">Dietary Preferences</h2>
+            <h2 className="font-bold text-gray-900 uppercase text-xl mb-4 [font-family:var(--font-family-heading)]">Dietary Preferences</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Dietary Restrictions</label>
@@ -633,7 +325,7 @@ export default function ProfilePage() {
       case 3:
         return (
           <section className="border-b border-orange-100 pb-6">
-            <h2 className="text-xl font-semibold text-orange-700 mb-4">Health Goals</h2>
+            <h2 className="font-bold text-gray-900 uppercase text-xl mb-4 [font-family:var(--font-family-heading)]">Health Goals</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Primary Goal</label>
@@ -714,7 +406,7 @@ export default function ProfilePage() {
       case 4:
         return (
           <section className="border-b border-orange-100 pb-6">
-            <h2 className="text-xl font-semibold text-orange-700 mb-4">Cooking Habits</h2>
+            <h2 className="font-bold text-gray-900 uppercase text-xl mb-4 [font-family:var(--font-family-heading)]">Cooking Habits</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Cooking Skill Level</label>
@@ -768,7 +460,7 @@ export default function ProfilePage() {
       case 5:
         return (
           <section className="border-b border-orange-100 pb-6">
-            <h2 className="text-xl font-semibold text-orange-700 mb-4">Meal Preferences</h2>
+            <h2 className="font-bold text-gray-900 uppercase text-xl mb-4 [font-family:var(--font-family-heading)]">Meal Preferences</h2>
             <div className="space-y-4">
               <div>
                 <label className="block  text-sm font-medium text-gray-700">Meal Types</label>
@@ -826,7 +518,7 @@ export default function ProfilePage() {
       case 6:
         return (
           <section className="border-b border-orange-100 pb-6">
-            <h2 className="text-xl font-semibold text-orange-700 mb-4">Lifestyle and Habits</h2>
+            <h2 className="font-bold text-gray-900 uppercase text-xl mb-4 [font-family:var(--font-family-heading)]">Lifestyle and Habits</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Activity Level</label>
@@ -876,7 +568,7 @@ export default function ProfilePage() {
       case 7:
         return (
           <section className="border-b border-orange-100 pb-6">
-            <h2 className="text-xl font-semibold text-orange-700 mb-4">Additional Preferences</h2>
+            <h2 className="font-bold text-gray-900 uppercase text-xl mb-4 [font-family:var(--font-family-heading)]">Additional Preferences</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Spice Tolerance</label>
@@ -931,10 +623,10 @@ export default function ProfilePage() {
 
 
   return (
-    <div className="min-h-screen bg-orange-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h1 className="text-3xl font-bold text-orange-600 mb-8">Your Profile</h1>
+          <h1 className="text-3xl font-bold text-[var(--primary-color)] [font-family:var(--font-family-heading)] mb-8">Your Profile</h1>
 
           {/* Progress bar */}
           <div className="mb-8">
@@ -951,7 +643,7 @@ export default function ProfilePage() {
             </div>
             <div className="h-2 bg-gray-200 rounded-full">
               <div
-                className="h-full bg-orange-600 rounded-full transition-all duration-300"
+                className="h-full bg-red-600 rounded-full transition-all duration-300"
                 style={{ width: `${(currentSection / sections.length) * 100}%` }}
               />
             </div>
@@ -969,7 +661,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => setCurrentSection(prev => Math.max(1, prev - 1))}
                 disabled={currentSection === 1}
-                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-700 disabled:opacity-50"
               >
                 Previous
               </button>
@@ -977,7 +669,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-700 hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50"
                 >
                   {saving ? <LoaderCircle className='animate-spin' /> : 'Save Profile'}
                 </button>
@@ -988,7 +680,7 @@ export default function ProfilePage() {
                     e.preventDefault();
                     setCurrentSection(prev => Math.min(sections.length, prev + 1));
                   }}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-700 hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 >
                   Next
                 </button>

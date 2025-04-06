@@ -40,15 +40,15 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 mt-12">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-center uppercase mb-2">Welcome chief<br /></h1>
+        <h1 className="text-5xl font-bold text-center uppercase mb-2 text-[var(--primary-color)] [font-family:var(--font-family-heading)]">Welcome chief<br /></h1>
         <div className='flex justify-center'>
-          <h3 className='text-xl text-center font-semibold mr-1'>I will be your </h3>
-          <ChefHat />
-          <h3 className='text-xl text-center font-semibold mb-2'> Chef for today</h3>
+          <h3 className='text-3xl text-center font-semibold mr-1'>I will be your </h3>
+          <ChefHat size={35} />
+          <h3 className='text-3xl text-center font-semibold mb-2'> Chef for today</h3>
         </div>
-        <h3 className='text-xl text-center mb-8'>Let me make you some healthy and delicious meal.</h3>
+        <h3 className='text-xl text-center mb-4 text-gray-500 mt-8'>Allow me cook you some healthy and delicious meal.</h3>
 
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,7 +67,7 @@ export default function ChatPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className='cursor-pointer bg-amber-600 hover:bg-amber-700'
+              className='cursor-pointer bg-green-600 hover:bg-green-800'
             >
               {isLoading ? (
                 'Hold up! Let me cook'

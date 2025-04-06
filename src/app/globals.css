@@ -120,3 +120,55 @@
     @apply bg-background text-foreground;
   }
 }
+
+:root {
+  --fa-style-family-brands: "Font Awesome 6 Brands";
+  --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+  --fa-font-duotone: normal 900 1em/1 "Font Awesome 6 Duotone";
+  --fa-font-light: normal 300 1em/1 "Font Awesome 6 Pro";
+  --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Pro";
+  --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Pro";
+  --fa-style-family-classic: "Font Awesome 6 Pro";
+  --fa-font-thin: normal 100 1em/1 "Font Awesome 6 Pro";
+  --fa-font-duotone-regular: normal 400 1em/1 "Font Awesome 6 Duotone";
+  --fa-font-duotone-light: normal 300 1em/1 "Font Awesome 6 Duotone";
+  --fa-style-family-duotone: "Font Awesome 6 Duotone";
+  --fa-font-duotone-thin: normal 100 1em/1 "Font Awesome 6 Duotone";
+  --fa-font-sharp-solid: normal 900 1em/1 "Font Awesome 6 Sharp";
+  --fa-font-sharp-regular: normal 400 1em/1 "Font Awesome 6 Sharp";
+  --fa-font-sharp-light: normal 300 1em/1 "Font Awesome 6 Sharp";
+  --fa-style-family-sharp: "Font Awesome 6 Sharp";
+  --fa-font-sharp-thin: normal 100 1em/1 "Font Awesome 6 Sharp";
+  --fa-font-sharp-duotone-solid: normal 900 1em/1 "Font Awesome 6 Sharp Duotone";
+  --fa-font-sharp-duotone-regular: normal 400 1em/1 "Font Awesome 6 Sharp Duotone";
+  --fa-font-sharp-duotone-light: normal 300 1em/1 "Font Awesome 6 Sharp Duotone";
+  --fa-style-family-sharp-duotone: "Font Awesome 6 Sharp Duotone";
+  --fa-font-sharp-duotone-thin: normal 100 1em/1 "Font Awesome 6 Sharp Duotone";
+
+  --accent-color: #ffaa3c;
+  --accent2-color: #ffdd89;
+  --accent3-color: #bcaca5;
+  --accent4-color: #7c9983;
+  --primary-color: #72b872;
+  --dark-text-color: #333333;
+  --gray-text-color: #777777;
+  --button-padding-x: 15px;
+  --button-padding-y: 10px;
+  --font-family-body: 'Nunito', sans-serif;
+  --font-family-heading: 'Roboto Slab', serif;
+  --light-text-color: #ffffff;
+  --dark-border-color: #455f45;
+  --light-border-color: #e4e4e4;
+  --button-rounded-radius: 5px;
+  --dark-background-color: #2d3e2d;
+  --light-background-color: #e9f2e9;
+  --medium-background-color: #d3e5d3;
+  --primary-button-bg-color: #72b872;
+  --primary-button-text-color: #ffffff;
+  --secondary-button-bg-color: #f4f4f4;
+  --secondary-button-text-color: #72b872;
+  --primary-button-hover-bg-color: #60a05c;
+  --primary-button-hover-text-color: #ffffff;
+  --secondary-button-hover-bg-color: #e0e0e0;
+  --secondary-button-hover-text-color: #60a05c;
+}

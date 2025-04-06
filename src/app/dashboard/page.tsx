@@ -68,6 +68,14 @@ export default function DashboardPage() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [tooltipPoint, setTooltipPoint] = useState<ChartPoint | null>(null);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = date.toLocaleString('default', { month: 'short' });
+    return `${day}-${month}`;
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -76,7 +84,7 @@ export default function DashboardPage() {
         const userResponse = await fetchUser()
         console.log("User response:", userResponse)
 
-        
+
 
         if (!userResponse || !userResponse.data?.user) {
           console.error('No user found')
@@ -130,7 +138,7 @@ export default function DashboardPage() {
           sevenDaysAgo.setDate(today.getDate() - 7)
 
           const dailyData: { [key: string]: DailyNutrition } = {}
-          
+
           recipes.forEach((recipe: SavedRecipe) => {
             const recipeDate = new Date(recipe.created_at)
             if (recipeDate >= sevenDaysAgo) {
@@ -144,7 +152,7 @@ export default function DashboardPage() {
                   fat: 0
                 }
               }
-              
+
               const nutrition = recipe.recipe_data.nutrition
               dailyData[dateKey].calories += nutrition.calories
               dailyData[dateKey].protein += nutrition.protein
@@ -156,7 +164,7 @@ export default function DashboardPage() {
           // Convert to array and sort by date
           const nutritionArray = Object.values(dailyData)
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-          
+
           setDailyNutrition(nutritionArray)
           console.log('Daily nutrition calculated:', nutritionArray)
         }
@@ -176,7 +184,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-800 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
@@ -187,7 +195,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{error}</p>
+          <p className="text-red-800 mb-4">{error}</p>
           <Button variant="outline" onClick={() => window.location.reload()}>
             Try Again
           </Button>
@@ -195,6 +203,23 @@ export default function DashboardPage() {
       </div>
     )
   }
+
+
+  const formatChartData = (data: DailyNutrition[]): ChartPoint[] => {
+    // Make sure we have data sorted by date
+    const sortedData = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Format the date to be more readable in the chart
+    return sortedData.map(item => ({
+      date: formatDate(item.date), // Use the existing formatDate function to display dates better
+      calories: item.calories || 0,
+      protein: item.protein || 0,
+      carbs: item.carbs || 0,
+      fat: item.fat || 0
+    }));
+  };
+
+
 
   // Calculate today's nutrition totals
   const today = new Date().toISOString().split('T')[0]
@@ -205,7 +230,7 @@ export default function DashboardPage() {
     fat: 0
   }
 
-  const caloriePercentage = userProfile?.calorie_intake 
+  const caloriePercentage = userProfile?.calorie_intake
     ? Math.round((todayNutrition.calories / userProfile.calorie_intake) * 100)
     : 0
 
@@ -221,40 +246,29 @@ export default function DashboardPage() {
     ? Math.round((todayNutrition.fat / userProfile.macronutrient_preferences.fat) * 100)
     : 0
 
-  // Add this function to format the data for charts
-  const formatChartData = (data: DailyNutrition[]): ChartPoint[] => {
-    return data.map(item => ({
-      date: item.date,
-      calories: item.calories || 0,
-      protein: item.protein || 0,
-      carbs: item.carbs || 0,
-      fat: item.fat || 0
-    }))
-  }
+
 
   return (
-    <div className="flex min-h-screen flex-col bg-orange-50">
+    <div className="flex min-h-screen flex-col ">
       <main className="flex-1 py-8">
         <div className="container mx-auto max-w-7xl px-4">
-          {/* Welcome Section */}
           <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold mb-2">Welcome back, {userProfile?.name?.split(" ")[0]}!</h1>
             <p className="text-gray-600">Here's an overview of your nutrition and recipes.</p>
           </div>
 
-        
+
           <div className="max-w-4xl mx-auto">
             <Tabs defaultValue="overview" className="mb-8">
-            <div defaultValue="overview" className=" flex justify-center">
-              <TabsList className="bg-white border border-orange-100 flex justify-center">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
-                <TabsTrigger value="recipes">Recipes</TabsTrigger>
-              </TabsList>
-            </div>
+              <div defaultValue="overview" className=" flex justify-center">
+                <TabsList className="bg-white border border-orange-100 flex justify-center">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+
+                  <TabsTrigger value="recipes">Recipes</TabsTrigger>
+                </TabsList>
+              </div>
 
               <TabsContent value="overview" className="mt-6">
-                {/* Today's Summary */}
                 <div className="grid gap-6 md:grid-cols-4 mb-8">
                   <Card>
                     <CardHeader className="pb-2">
@@ -329,8 +343,9 @@ export default function DashboardPage() {
                   </Card>
                 </div>
 
-                {/* Weekly Charts */}
-                {/* <div className="grid gap-6 md:grid-cols-2 mb-8">
+
+                <div className="grid gap-6 md:grid-cols-2 mb-8">
+
                   <Card>
                     <CardHeader>
                       <CardTitle>Calorie Intake (Past Week)</CardTitle>
@@ -339,18 +354,18 @@ export default function DashboardPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {dailyNutrition && dailyNutrition.length > 0 ? (
-                          <ChartContainer 
-                            data={formatChartData(dailyNutrition)} 
-                            xAxisKey="date" 
+                          <ChartContainer
+                            data={formatChartData(dailyNutrition)}
+                            xAxisKey="date"
                             yAxisKey="calories"
                           >
                             <ChartGrid />
                             <ChartYAxis />
                             <ChartXAxis />
-                            <ChartLineLayer 
-                              dataKey="calories" 
-                              curve="linear" 
-                              className="stroke-orange-500 stroke-2" 
+                            <ChartLineLayer
+                              dataKey="calories"
+                              curve="linear"
+                              className="stroke-orange-500 stroke-2"
                             />
                             <ChartLine
                               className="stroke-orange-500/20 stroke-dasharray-2"
@@ -358,14 +373,14 @@ export default function DashboardPage() {
                               y={userProfile?.calorie_intake || 0}
                             />
                             <ChartTooltip>
-                              {({ point }: { point: ChartPoint }) => (
+                              {({ point }) => (
                                 <ChartTooltipContent>
                                   <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-2">
                                       <div className="h-2 w-2 rounded-full bg-orange-500" />
-                                      <span className="font-medium">{point.date}</span>
+                                      <span className="font-medium">{point?.data?.date || 'N/A'}</span>
                                     </div>
-                                    <div className="text-sm text-gray-500">{point.calories} calories</div>
+                                    <div className="text-sm text-gray-500">{point?.data?.calories || 0} calories</div>
                                   </div>
                                 </ChartTooltipContent>
                               )}
@@ -379,6 +394,7 @@ export default function DashboardPage() {
                       </div>
                     </CardContent>
                   </Card>
+
 
                   <Card>
                     <CardHeader>
@@ -388,9 +404,9 @@ export default function DashboardPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {dailyNutrition && dailyNutrition.length > 0 ? (
-                          <ChartContainer 
-                            data={formatChartData(dailyNutrition)} 
-                            xAxisKey="date" 
+                          <ChartContainer
+                            data={formatChartData(dailyNutrition)}
+                            xAxisKey="date"
                             yAxisKey="protein"
                           >
                             <ChartGrid />
@@ -400,21 +416,21 @@ export default function DashboardPage() {
                             <ChartBarLayer dataKey="carbs" className="fill-green-500" />
                             <ChartBarLayer dataKey="fat" className="fill-yellow-500" />
                             <ChartTooltip>
-                              {({ point }: { point: ChartPoint }) => (
+                              {({ point }) => (
                                 <ChartTooltipContent>
                                   <div className="flex flex-col gap-1">
-                                    <div className="font-medium">{point.date}</div>
+                                    <div className="font-medium">{point?.data?.date || 'N/A'}</div>
                                     <div className="flex items-center gap-2">
                                       <div className="h-2 w-2 rounded-full bg-blue-500" />
-                                      <span className="text-sm text-gray-500">Protein: {point.protein}g</span>
+                                      <span className="text-sm text-gray-500">Protein: {point?.data?.protein || 0}g</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <div className="h-2 w-2 rounded-full bg-green-500" />
-                                      <span className="text-sm text-gray-500">Carbs: {point.carbs}g</span>
+                                      <span className="text-sm text-gray-500">Carbs: {point?.data?.carbs || 0}g</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                                      <span className="text-sm text-gray-500">Fat: {point.fat}g</span>
+                                      <span className="text-sm text-gray-500">Fat: {point?.data?.fat || 0}g</span>
                                     </div>
                                   </div>
                                 </ChartTooltipContent>
@@ -429,15 +445,10 @@ export default function DashboardPage() {
                       </div>
                     </CardContent>
                   </Card>
-                </div> */}
-              </TabsContent>
-
-              <TabsContent value="nutrition" className="mt-6">
-                <div className="text-center py-12">
-                  <p className="text-gray-500">Detailed nutrition analytics will appear here.</p>
                 </div>
-              </TabsContent>
 
+
+              </TabsContent>
               <TabsContent value="recipes" className="mt-6">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {savedRecipes.length > 0 ? (
@@ -462,6 +473,7 @@ export default function DashboardPage() {
                             <div>Carbs: {recipe.recipe_data.nutrition.carbs}g</div>
                             <div>Fat: {recipe.recipe_data.nutrition.fat}g</div>
                           </div>
+                          <p className='text-sm mt-2'>CreatedAt: {formatDate(recipe.created_at)}</p>
                         </CardContent>
                         <CardFooter>
                           <Button variant="outline" size="sm" className="w-full" asChild>
@@ -485,7 +497,7 @@ export default function DashboardPage() {
           {/* Generate New Recipe Button */}
           <div className="flex justify-center mt-8">
             <Link href="/chat">
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg gap-2">
+              <Button className="bg-green-700 hover:bg-green-900 text-white px-8 py-6 text-lg gap-2">
                 <Plus className="h-5 w-5" />
                 Generate New Recipe
               </Button>

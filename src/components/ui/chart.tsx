@@ -13,7 +13,7 @@ interface ChartPoint {
 }
 
 interface ChartTooltipProps {
-  children: React.ComponentType<{ point: ChartPoint }>
+  children: (props: { point?: any }) => React.ReactNode;
 }
 
 export const Chart = ({ children }: ChartProps) => {
@@ -74,8 +74,23 @@ export const ChartYAxis = () => {
   return <div className="chart-y-axis"></div>
 }
 
-export const ChartTooltip = ({ children: TooltipContent }: ChartTooltipProps) => {
-  return <div className="chart-tooltip"><TooltipContent /></div>
+export const ChartTooltip = ({ children }: ChartTooltipProps) => {
+  // Create a dummy point object to prevent errors
+  const dummyPoint = {
+    data: {
+      date: '',
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    }
+  };
+  
+  return (
+    <div className="chart-tooltip">
+      {children({ point: dummyPoint })}
+    </div>
+  );
 }
 
 export const ChartTooltipContent = ({ children }: ChartProps) => {

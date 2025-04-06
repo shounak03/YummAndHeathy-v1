@@ -118,8 +118,10 @@ export async function POST(request: Request) {
             "substitutions": ["sub 1", "sub 2", ...]
           }
         ]
-}`
+    }`
 
+
+    
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const response = await ai.models.generateContent({
