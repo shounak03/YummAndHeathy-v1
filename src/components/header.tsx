@@ -30,12 +30,14 @@ export default async function Header() {
         <div className="flex items-center justify-between relative">
           
           <div className="pl-6 text-xl font-bold flex justify-start">
-          <img
+          <Image
             src={"/diet.png"}
             alt='logo'
             width={35}
             height={35}
             className='mr-2'
+            unoptimized
+            priority
           />
             <Link href="/" className="text-3xl text-[var(--primary-color)] [font-family:var(--font-family-heading)]">
               <span>Yumm</span>

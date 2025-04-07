@@ -80,11 +80,15 @@ export const providerSignIn = async() => {
   const callbackUrl = isProduction 
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
     : 'http://localhost:3000/auth/callback';
- 
+
+  console.log(callbackUrl);
+    
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: callbackUrl
+      redirectTo: callbackUrl,
+      // Add this to ensure proper session handling across domains
+      scopes: 'email profile'
     }
   });
   
