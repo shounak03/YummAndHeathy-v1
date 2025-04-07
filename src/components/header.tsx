@@ -21,7 +21,7 @@
 // export default async function Header() {
 //   const supabase = await createClient()
 //   const { data: { user } } = await supabase.auth.getUser()
-  
+
 //   const headerList = await headers();
 //   const pathname = headerList.get("x-current-path");
 
@@ -29,7 +29,7 @@
 //     <header className="relative z-50 code-section" id="sd5zl4">
 //       <nav className="container mx-auto py-10 hovered-element">
 //         <div className="flex items-center justify-between relative">
-          
+
 //           <div className="pl-6 text-xl font-bold flex justify-start">
 //           <Image
 //             src={"/diet.png"}
@@ -45,12 +45,12 @@
 //               <span className="text-[var(--dark-text-color)]">&amp;Healthy</span>
 //             </Link>
 //           </div>
-          
+
 //           {/* Mobile Menu Button */}
 //           <button id="mobile-menu-button" data-collapse-toggle="navigation-menu" type="button" className="pr-6 text-[var(--dark-text-color)] lg:hidden" aria-controls="navigation-menu" aria-expanded="false" aria-label="Navigation Menu">
 //             <i className="fa-regular fa-bars feather feather-menu" aria-hidden="true"></i>
 //           </button>
-          
+
 //           {/* Navigation Menu */}
 //           <div id="navigation-menu" className="hidden absolute left-0 top-full mt-4 w-full bg-white pb-4 lg:static lg:mt-0 lg:flex flex-1 lg:items-center lg:justify-between lg:bg-transparent lg:pb-0">
 //             {/* Always maintain a container for navigation links, even if empty */}
@@ -80,7 +80,7 @@
 //                 </ul>
 //               }
 //             </div>
-            
+
 //             {/* Auth Section - Always aligned to the right */}
 //             <div className="flex flex-col mt-4 lg:flex-row items-center lg:justify-end lg:ml-4 space-y-4 lg:mt-0 lg:space-y-0 lg:space-x-4 text-sm lg:text-base">
 //               {!user ? (
@@ -138,6 +138,8 @@
 // Remove "use server" from the top - this component needs client interactivity
 // If you need some server-side data, use a separate data fetching function
 
+"use client"
+
 import { User2, LogOut, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -151,55 +153,100 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useEffect, useState } from 'react'
+import { Button } from './ui/button'
+import { toast } from 'sonner'
+import { fetchUser } from '@/app/auth/action'
 
-import { headers } from 'next/headers'
 
-// Create a separate server component/function for data fetching
-async function getHeaderData() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+
+
+interface UserMetadata {
   
-  const headerList = await headers();
-  const pathname = headerList.get("x-current-path");
-  
-  return { user, pathname }
+  name?: string;
+  [key: string]: any; // For any other metadata properties
 }
 
-export default async function Header() {
-  // Get data from server
-  const { user, pathname } = await getHeaderData()
+
+interface User {
+  id: string;
+  email?: string;
+  user_metadata: {avatar_url?: string;};
+  app_metadata?: any;
+  aud?: string;
+  created_at?: string;
+  updated_at?: string;
+  role?: string;
+  [key: string]: any; // For any other properties from Supabase Auth
+}
+
+export default function Header() {
+  const [user, setUser] = useState<{ user: User } | { user: null } | undefined>()
+
+  const [pathname, setPathname] = useState("")
+  // const router = useRouter()
+
+  async function getHeaderData() {
+    try {
+
+      const { data, error } = await fetchUser()
+      console.log("user", data);
+      if (!data)
+        return error
+      setUser(data)
+      const pathname = window.location.pathname
+      setPathname(pathname)
+    } catch (error) {
+      console.log("Error fetching user data:", error)
+      toast.error("Error fetching user profile")
+    }
+  }
+
+  async function logoutfn() {
+    const res = await fetch(`api/auth/logout`)
+    console.log(res);
+
+    if (!res.ok)
+      return toast.error("Logout failed")
+    toast.success("User logged out successfully");
+    return window.location.reload()
+  }
+
+  useEffect(() => {
+    getHeaderData()
+  }, [])
 
   return (
     <header className="relative z-50 code-section" id="sd5zl4">
       <nav className="container mx-auto py-10 hovered-element">
         <div className="flex items-center justify-between relative">
-          
+
           <div className="pl-6 text-xl font-bold flex justify-start">
-          <Image
-            src={"/diet.png"}
-            alt='logo'
-            width={35}
-            height={35}
-            className='mr-2'
-            unoptimized
-            priority
-          />
+            <Image
+              src={"/diet.png"}
+              alt='logo'
+              width={35}
+              height={35}
+              className='mr-2'
+              unoptimized
+              priority
+            />
             <Link href="/" className="text-3xl text-[var(--primary-color)] [font-family:var(--font-family-heading)]">
               <span>Yumm</span>
               <span className="text-[var(--dark-text-color)]">&amp;Healthy</span>
             </Link>
           </div>
-          
+
           {/* Mobile Menu Button */}
           <button id="mobile-menu-button" data-collapse-toggle="navigation-menu" type="button" className="pr-6 text-[var(--dark-text-color)] lg:hidden" aria-controls="navigation-menu" aria-expanded="false" aria-label="Navigation Menu">
             <i className="fa-regular fa-bars feather feather-menu" aria-hidden="true"></i>
           </button>
-          
+
           {/* Navigation Menu */}
           <div id="navigation-menu" className="hidden absolute left-0 top-full mt-4 w-full bg-white pb-4 lg:static lg:mt-0 lg:flex flex-1 lg:items-center lg:justify-between lg:bg-transparent lg:pb-0">
             {/* Always maintain a container for navigation links, even if empty */}
             <div className="flex-1 flex justify-center">
-              {pathname === "/" && 
+              {pathname === "/" &&
                 <ul className="flex flex-col lg:px-6 lg:flex-row flex-1 lg:justify-center lg:items-center lg:space-y-0 lg:space-x-8">
                   <li className="flex items-center p-2 border-t border-gray-200 md:border-t-transparent md:p-0">
                     <a href="/about-us" className="text-[var(--dark-text-color)]">About</a>
@@ -224,18 +271,13 @@ export default async function Header() {
                 </ul>
               }
             </div>
-            
+
             {/* Auth Section - Always aligned to the right */}
             <div className="flex flex-col mt-4 lg:flex-row items-center lg:justify-end lg:ml-4 space-y-4 lg:mt-0 lg:space-y-0 lg:space-x-4 text-sm lg:text-base">
-              {!user ? (
-                <>
-                  <Link href="/auth/login" className="px-4 py-2 text-[var(--dark-text-color)]">Log In</Link>
-                  <Link href="/auth/signup" className="rounded bg-[var(--primary-button-bg-color)] px-4 py-2 text-[var(--primary-button-text-color)] hover:bg-[var(--primary-button-hover-bg-color)]">Sign Up</Link>
-                </>
-              ) : (
+              {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Image src={user.user_metadata.avatar_url || '/placeholder.png'}
+                    <Image src={'/placeholder.png'}
                       alt='icon'
                       height={40}
                       width={40}
@@ -243,12 +285,6 @@ export default async function Header() {
                     />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user?.user_metadata?.name || "User"}</p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
                     <DropdownMenuItem>
                       <Link href="/dashboard" className="flex items-center w-full">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -263,13 +299,18 @@ export default async function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>
-                      <Link href="/api/auth/logout" className="flex w-full items-center text-red-600 focus:text-red-600">
+                      <Button className="flex w-full items-center bg-green-900 text-white focus:text-red-600" onClick={logoutfn}>
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout
-                      </Link>
+                      </Button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="px-4 py-2 text-[var(--dark-text-color)]">Log In</Link>
+                  <Link href="/auth/signup" className="rounded bg-[var(--primary-button-bg-color)] px-4 py-2 text-[var(--primary-button-text-color)] hover:bg-[var(--primary-button-hover-bg-color)]">Sign Up</Link>
+                </>
               )}
             </div>
           </div>
