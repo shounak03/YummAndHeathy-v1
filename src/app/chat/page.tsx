@@ -48,7 +48,7 @@ export default function ChatPage() {
           <ChefHat size={35} />
           <h3 className='text-3xl text-center font-semibold mb-2'> Chef for today</h3>
         </div>
-        <h3 className='text-xl text-center mb-4 text-gray-500 mt-8'>Allow me cook you some healthy and delicious meal.</h3>
+        <h3 className='text-xl text-center mb-4 text-gray-500 mt-8'>Allow me to cook you some healthy and delicious meal.</h3>
 
 
         <form onSubmit={handleSubmit} className="space-y-4">

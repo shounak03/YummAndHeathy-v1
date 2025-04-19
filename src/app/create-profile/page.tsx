@@ -86,29 +86,6 @@ export default function ProfilePage() {
     sustainability: [],
   })
 
-  // useEffect(() => {
-  //   const fetchProfile = async () => {
-  //     try {
-  //       const supabase = createClientComponentClient()
-  //       const { data: { user } } = await supabase.auth.getUser()
-
-  //       if (user) {
-  //         const response = await fetch(`/api/profile?userId=${user.id}`)
-  //         const data = await response.json()
-  //         if (data.data) {
-  //           setProfile(data.data)
-  //         }
-  //       }
-  //     } catch (err) {
-  //       setError('Failed to load profile')
-  //     } finally {
-  //       setLoading(false)
-  //     }
-  //   }
-
-  //   fetchProfile()
-  // }, [])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -176,7 +153,7 @@ export default function ProfilePage() {
       setProfile({
         ...profile,
         location: { city, state },
-      }); // Clear the input after saving
+      }); 
     }
   };
 

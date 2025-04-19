@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { redirect, useParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock, Utensils, DollarSign, Leaf, ChefHat } from "lucide-react"
-
+import { Button } from "@/components/ui/button"
 interface Recipe {
   id: string
   name: string
@@ -33,7 +33,7 @@ export default function RecipePage() {
   const params = useParams()
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [error, setError] = useState<string | null>(null)
-
+  // const router = useRouter()
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
@@ -71,6 +71,7 @@ export default function RecipePage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
+      
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">{recipe.name}</CardTitle>
@@ -187,6 +188,13 @@ export default function RecipePage() {
             </div>
           )}
         </CardContent>
+        <div className="flex items-center justify-center">
+
+            <Button className="w-[50%] cursor-pointer bg-green-700 hover:bg-green-900" onClick={()=>{
+              redirect('/dashboard')
+            }}>back to dashboard</Button>
+
+        </div>
       </Card>
     </div>
   )

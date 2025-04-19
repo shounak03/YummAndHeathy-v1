@@ -55,7 +55,6 @@ export default function ProfilePage() {
       if (error) throw error
 
       if (!data) {
-        // If no profile exists, redirect to create profile page
         router.push('/create-profile')
         return
       }
